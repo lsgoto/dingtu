@@ -193,6 +193,55 @@ h3{font-size:14.4px;font-weight:400;color:var(--ink2);margin:13px 0 6px;letter-s
   .midbody{padding:8px 12px}
   .sheet{padding:18px 16px}
 }
+.midtools{display:none}
+.poolrow{font-size:12.6px;color:var(--ink2);margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.elemhint{font-size:12.6px;color:#8f3226;margin:6px 0 6px}
+.paneclose{display:none}
+.forgetabs{display:none}
+
+@media (max-width: 860px){
+  #sBattle.on{display:flex;flex-direction:column;height:100%;overflow:hidden;padding:0;position:relative}
+  .mid{order:1;flex:1;min-height:0;display:flex;flex-direction:column;border:0}
+  .midhead{flex:0 0 auto;padding:8px 12px 6px;background:#efe3cb;border-bottom:1px solid var(--line)}
+  .midbody{flex:1;min-height:0;overflow-y:auto;padding:8px 12px 12px}
+  .actions{flex:0 0 auto;padding:8px 12px 10px}
+  .clock{margin:6px 0 4px;padding:6px 9px}
+  .clock .row{margin:2px 0;font-size:12.6px}
+  .clock .row .who{width:52px}
+  .clock .row .tm{width:58px;font-size:11.5px}
+  .poolrow{font-size:12px;margin-top:2px}
+  .midtools{display:flex;gap:6px;margin-left:auto}
+  .col.left,.col.right{position:absolute;inset:0;z-index:30;background:var(--paper);overflow-y:auto;display:none;padding:14px 14px 20px;border:0}
+  .col.left.show,.col.right.show{display:block}
+  .paneclose{display:block;position:absolute;top:10px;right:12px;font-size:20px;line-height:1;padding:2px 9px}
+  .part{flex-wrap:wrap;gap:4px 8px;padding:8px 9px}
+  .part .nm{width:auto}
+  .part .type{width:auto}
+  .part .dots{width:auto}
+  .part .pct{width:auto;margin-left:auto}
+  .part .skl{width:100%;margin-left:0;text-align:left;font-size:12.2px}
+  .wslots{gap:6px}
+  .ws{min-width:0;flex:1}
+  .skills{gap:6px}
+  .sk{min-width:0;flex:1 1 100%}
+  .sk+.btn.red{flex:1 1 100%;width:100%}
+  .forgetabs{display:flex;gap:6px;margin-bottom:10px;position:sticky;top:0;z-index:5;background:var(--paper);padding:6px 0}
+  .ftab{flex:1;font-family:inherit;font-size:14px;padding:8px 4px;border:1px solid var(--line);background:#efe3cb;color:var(--ink2);cursor:pointer;letter-spacing:.1em}
+  .ftab.on{background:#8f3226;color:#f6ecd8;border-color:#8f3226}
+  .fsect{display:none}
+  .fsect.on{display:block}
+  .mebox>summary{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:9px 11px;border:1px solid var(--line);background:#efe3cb;cursor:pointer;list-style:none;letter-spacing:.04em}
+  .mebox>summary::-webkit-details-marker{display:none}
+  .mebox>summary b{margin-left:auto;color:#8f3226;font-weight:400;font-size:12.5px}
+  .mebox[open]>summary{border-bottom:0}
+  .mebox:not([open])>.mebody{display:none}
+  .hubside{order:-1;margin-bottom:14px}
+  .mebody{padding:10px 11px;border:1px solid var(--line);background:#f7efdd}
+}
+@media (min-width: 861px){
+  .mebox>summary{display:none}
+  .mebox>.mebody{display:block}
+}
 </style>
 </head>
 <body>
@@ -1005,6 +1054,7 @@ function beastCard(b){
   '</div>';
 }
 function renderHub(){
+  const st = stats();
   const g0 = Object.values(BEASTS).filter(b=>b.grade===0).map(beastCard).join('');
   const g1 = Object.values(BEASTS).filter(b=>b.grade===1).map(beastCard).join('');
   $('sHub').innerHTML =
@@ -1016,8 +1066,11 @@ function renderHub(){
         '<div class="beastgrid">'+g1+'</div>'+
       '</div>'+
       '<div class="hubside">'+
+        '<details class="mebox"'+(window.innerWidth>860?' open':'')+'>'+
+        '<summary><span>你</span><span>血 '+Math.round(S.hp)+' / '+st.hp+'</span><span>贝 '+S.coins+'</span><span>行速 '+st.sp+'</span><b>'+(window.innerWidth>860?'':'点开看详情')+'</b></summary>'+
+        '<div class="mebody">'+
         '<h2>你 · 身具</h2>'+statBlock()+
-        '<div class="bar" style="margin-top:4px"><i style="width:'+Math.max(0,S.hp)/playerMaxHp()*100+'%"></i></div>'+
+        '<div class="bar" style="margin-top:4px"><i style="width:'+Math.max(0,S.hp)/st.hp*100+'%"></i></div>'+
         '<div style="margin-top:10px">'+equipRows()+'</div>'+
         '<h3>契印　3 / 6 / 9</h3>'+sealBlock()+
         '<h3>神通</h3><div class="muted">'+skillLine()+'</div>'+
@@ -1025,6 +1078,7 @@ function renderHub(){
         '<button class="btn wide" onclick="renderBag()">囊 中 器 材</button>'+
         '<button class="btn wide" style="margin-top:7px" onclick="renderForge()">鼎 工 处</button>'+
         '<button class="btn wide" style="margin-top:7px" onclick="restHeal()">歇 一 宿（回满）</button>'+
+        '</div></details>'+
       '</div>'+
     '</div>';
   showScreen('hub');
@@ -1151,15 +1205,28 @@ function renderForge(){
   const arm = RECIPES.filter(r=>r.kind==='armor').map(recipeCard).join('');
   $('sForge').innerHTML =
     '<div style="max-width:1300px;margin:0 auto">'+
-      '<div class="gradehead">武 器</div><div class="grid3">'+wpn+'</div>'+
-      '<div class="sect"><div class="gradehead">饰 品</div><div class="grid3">'+trk+'</div></div>'+
-      '<div class="sect"><div class="gradehead">防 具 · 五 件 五 套</div><div class="grid3">'+arm+'</div></div>'+
+      '<div class="forgetabs">'+
+        '<button class="ftab on" onclick="forgeTab(0)">武 器</button>'+
+        '<button class="ftab" onclick="forgeTab(1)">饰 品</button>'+
+        '<button class="ftab" onclick="forgeTab(2)">防 具</button>'+
+      '</div>'+
+      '<div class="fsect on" id="fs0"><div class="gradehead">武 器</div><div class="grid3">'+wpn+'</div></div>'+
+      '<div class="fsect" id="fs1"><div class="sect"><div class="gradehead">饰 品</div><div class="grid3">'+trk+'</div></div></div>'+
+      '<div class="fsect" id="fs2"><div class="sect"><div class="gradehead">防 具 · 五 件 五 套</div><div class="grid3">'+arm+'</div></div></div>'+
       '<p class="muted" style="margin-top:12px">成器率底 80%。完璧 +5%，精奇 +2%，残缺 −3%，寻常不增不减。失败则诸材各降一档。<br>'+
       '品质：完璧'+QDESC['完璧']+'　精奇'+QDESC['精奇']+'　寻常'+QDESC['寻常']+'　残缺'+QDESC['残缺']+'</p>'+
     '</div>';
   renderHud();
   showScreen('forge');
   saveGame();
+}
+function forgeTab(i){
+  var tabs = document.querySelectorAll('.ftab');
+  for(var k=0;k<tabs.length;k++) tabs[k].classList.toggle('on', k===i);
+  for(var j=0;j<3;j++){
+    var el = document.getElementById('fs'+j);
+    if(el) el.classList.toggle('on', j===i);
+  }
 }
 function doForge(id){
   const r = recipeOf(id);
@@ -1223,6 +1290,15 @@ function unequip(slot){
 }
 
 /* ==================== 战斗界面 ==================== */
+function togglePane(which){
+  var id = which === 'left' ? 'paneLeft' : 'paneRight';
+  var el = document.getElementById(id);
+  if(!el) return;
+  var other = document.getElementById(which === 'left' ? 'paneRight' : 'paneLeft');
+  if(other) other.classList.remove('show');
+  el.classList.toggle('show');
+}
+
 function renderBattle(){
   if(!B) return;
   const st = stats();
@@ -1262,7 +1338,8 @@ function renderBattle(){
   }).join('');
 
   $('sBattle').innerHTML =
-  '<div class="col left">'+
+  '<div class="col left" id="paneLeft">'+
+    '<button class="rbtn paneclose" onclick="togglePane(\'left\')">×</button>'+
     '<h2>你</h2>'+
     '<div class="lbl"><span>体</span><span>'+Math.round(S.hp)+' / '+st.hp+'</span></div>'+
     '<div class="bar"><i style="width:'+(Math.max(0,S.hp)/st.hp*100)+'%"></i></div>'+
@@ -1279,19 +1356,23 @@ function renderBattle(){
       '<span class="muted" style="margin-left:auto">行速 '+B.atkSpeed+'</span></div>'+
       '<div class="lbl" style="margin-top:4px"><span>血</span><span>'+B.hp+' / '+B.maxHp+'</span></div>'+
       '<div class="bar"><i style="width:'+(B.hp/B.maxHp*100)+'%"></i></div>'+
-    '</div>'+
-    '<div class="midbody">'+
-      '<div style="font-size:12.6px;color:#8f3226;margin:8px 0 6px">五行：'+(weaponElem()?
-        (em>1?'你的'+weaponElem()+'克它的'+B.def.elem+'（×1.3）':(em<1?'你的'+weaponElem()+'被它的'+B.def.elem+'克（×0.85）':'不相克（×1）'))
-        :'你无属性（×1）')+'</div>'+
       '<div class="clock">'+
         '<div class="row"><span class="who">你</span><span class="track"><i style="width:'+pPct+'%;background:#8f3226"></i></span><span class="tm">'+fmt(nextP)+' 秒</span></div>'+
         '<div class="row"><span class="who">'+B.def.name+'</span><span class="track"><i style="width:'+mPct+'%;background:#2f5d62"></i></span><span class="tm">'+fmt(nextM)+' 秒</span></div>'+
       '</div>'+
+      '<div class="poolrow"><span>破窍池 '+fmt(B.pool)+' / '+fmt(poolThreshold())+
+        (B.guardFull?'　<b style="color:#2f5d62">水泡护体</b>':(B.guard?'　<b style="color:#2f5d62">壳已竖起</b>':''))+
+        (B.charging?'　<b style="color:#8f3226">它在蓄力</b>':'')+
+        '</span><span class="midtools">'+
+        '<button class="rbtn" onclick="togglePane(\'left\')">我</button>'+
+        '<button class="rbtn" onclick="togglePane(\'right\')">记</button>'+
+        '</span></div>'+
+    '</div>'+
+    '<div class="midbody">'+
+      '<p class="elemhint">五行：'+(weaponElem()?
+        (em>1?'你的'+weaponElem()+'克它的'+B.def.elem+'（×1.3）':(em<1?'你的'+weaponElem()+'被它的'+B.def.elem+'克（×0.85）':'不相克（×1）'))
+        :'你无属性（×1）')+'</p>'+
       partRows+
-      '<p class="muted" style="margin-top:10px">破窍池 '+fmt(B.pool)+' / '+fmt(poolThreshold())+
-      (B.guardFull?'　·　<b style="color:#2f5d62">水泡护体</b>':(B.guard?'　·　<b style="color:#2f5d62">壳已竖起</b>':''))+
-      (B.charging?'　·　<b style="color:#8f3226">它在蓄力</b>':'')+'</p>'+
     '</div>'+
     '<div class="actions">'+
       '<div class="wslots">'+wslots+'</div>'+
@@ -1305,7 +1386,8 @@ function renderBattle(){
       '</div>'+
     '</div>'+
   '</div>'+
-  '<div class="col right">'+
+  '<div class="col right" id="paneRight">'+
+    '<button class="rbtn paneclose" onclick="togglePane(\'right\')">×</button>'+
     '<h2>山 记</h2>'+
     '<div class="log" id="logBox">'+logHtml+'</div>'+
   '</div>';
