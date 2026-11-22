@@ -246,6 +246,18 @@ h3{font-size:14.4px;font-weight:400;color:var(--ink2);margin:13px 0 6px;letter-s
   .mebox>summary{display:none}
   .mebox>.mebody{display:block}
 }
+.duo{display:flex;flex-direction:column;gap:3px;margin-top:5px}
+.duo .row{display:flex;align-items:center;gap:7px;font-size:12.5px}
+.duo .who{width:20px;flex-shrink:0;color:var(--ink2)}
+.duo .track{flex:1;height:9px;background:#ddd0b4;border:1px solid #cbb896}
+.duo .track>i{display:block;height:100%}
+.duo .num{width:74px;text-align:right;color:var(--ink2);font-size:11.5px;flex-shrink:0}
+.mats{margin-top:5px}
+.matrow{display:flex;align-items:center;gap:6px;font-size:12.8px;line-height:1.7}
+.matrow .mq{display:flex;gap:3px;flex-wrap:wrap}
+.matrow .mq .tag{font-size:10.5px;padding:0 4px}
+.ratebar{display:flex;align-items:center;gap:6px;font-size:12.5px;margin-top:5px;color:var(--ink2);flex-wrap:wrap}
+.ratebar b{color:#8f3226;font-size:14px}
 </style>
 </head>
 <body>
@@ -1078,11 +1090,8 @@ function renderHub(){
         '<div style="margin-top:10px">'+equipRows()+'</div>'+
         '<h3>契印　3 / 6 / 9</h3>'+sealBlock()+
         '<h3>神通</h3><div class="muted">'+skillLine()+'</div>'+
-        '<div class="hr"></div>'+
-        '<button class="btn wide" onclick="renderBag()">囊 中 器 材</button>'+
-        '<button class="btn wide" style="margin-top:7px" onclick="renderForge()">鼎 工 处</button>'+
-        '<button class="btn wide" style="margin-top:7px" onclick="restHeal()">歇 一 宿（回满）</button>'+
         '</div></details>'+
+        '<button class="btn wide" style="margin-top:8px" onclick="restHeal()">歇 一 宿（回满体）</button>'+
       '</div>'+
     '</div>';
   showScreen('hub');
@@ -1140,7 +1149,6 @@ function renderBag(){
       '<h3>契印</h3>'+sealBlock()+
       '<div class="hr"></div>'+
       '<div class="muted">贝 '+S.coins+'</div>'+
-      '<button class="btn wide" style="margin-top:10px" onclick="renderHub()">回 山 门</button>'+
     '</div>'+
   '</div>';
   showScreen('bag');
@@ -1183,11 +1191,28 @@ function effectAt(r, q){
   if(seals.length) out.push(seals.map(s=>s+'印 '+sel).join('＋'));
   return out.join('　');
 }
+const QORD = {完璧:4, 精奇:3, 寻常:2, 残缺:1};
+function forgePreview(r){
+  let rate = 0.80, used = [], lack = false;
+  Object.keys(r.mats).forEach(function(k){
+    const arr = (S.bag[k]||[]).slice().sort(function(a,b){return QORD[b]-QORD[a];});
+    const take = arr.slice(0, r.mats[k]);
+    used = used.concat(take);
+    if(arr.length < r.mats[k]) lack = true;
+  });
+  used.forEach(function(q){ rate += q==='完璧'?0.05 : q==='精奇'?0.02 : q==='残缺'?-0.03 : 0; });
+  return {rate: Math.min(0.99, Math.max(0.05, rate)), lack: lack, used: used};
+}
 function recipeCard(r){
+  const pv = forgePreview(r);
   const need = Object.keys(r.mats).map(k=>{
-    const have = countMat(k);
-    return '<span style="color:'+(have>=r.mats[k]?'#2e7d4f':'#a33a2a')+'">'+matName(k)+' '+have+'/'+r.mats[k]+'</span>';
-  }).join('　');
+    const have = countMat(k), needN = r.mats[k];
+    const arr = (S.bag[k]||[]).slice().sort(function(a,b){return QORD[b]-QORD[a];});
+    const take = arr.slice(0, needN);
+    const ok = arr.length >= needN;
+    const qs = take.length ? take.map(q=>'<span class="tag q-'+q+'">'+q+'</span>').join('') : '<span class="muted" style="font-size:11.5px">无</span>';
+    return '<div class="matrow"><span style="color:'+(ok?'#2e7d4f':'#a33a2a')+'">'+matName(k)+'　'+arr.length+' / '+needN+'</span><span class="mq">'+qs+'</span></div>';
+  }).join('');
   const enough = Object.keys(r.mats).every(k=>countMat(k)>=r.mats[k]) && S.coins>=r.coins;
   const body = r.sks ? r.sks.map(s=>s.name+'　'+s.desc.replace('｜','，')).join('<br>') : effectAt(r,'精奇');
   const seals = r.seal ? [r.seal] : (r.seals || []);
@@ -1198,7 +1223,10 @@ function recipeCard(r){
       (seals.length?'<span class="tag" style="color:#8a6d3b">'+seals.join('＋')+'</span>':'')+
       (r.grade===1?'<span class="tag" style="color:#8f3226">二等</span>':'')+'</div>'+
     '<div class="details" style="margin-top:5px;color:#5c4c38">'+body+'</div>'+
-    '<div class="details" style="margin-top:4px">'+need+'　贝 '+r.coins+'</div>'+
+    '<div class="mats">'+need+'</div>'+
+    '<div class="ratebar">预计成器 <b>'+(pv.lack?'—':Math.round(pv.rate*100)+'%')+'</b>'+
+      (pv.lack?'<span class="muted">　料不足</span>':'')+
+      '<span style="margin-left:auto" class="muted">贝 '+S.coins+' / '+r.coins+'</span></div>'+
     '<button class="btn sm" style="margin-top:7px;width:100%" '+(enough?'':'disabled')+
       ' onclick="doForge(\''+r.id+'\')">开 炉</button>'+
   '</div>';
@@ -1358,11 +1386,9 @@ function renderBattle(){
       '<span class="g">'+GRADES[B.def.grade]+'</span>'+
       '<span class="e">'+B.def.elem+'</span>'+
       '<span class="muted" style="margin-left:auto">行速 '+B.atkSpeed+'</span></div>'+
-      '<div class="lbl" style="margin-top:4px"><span>血</span><span>'+B.hp+' / '+B.maxHp+'</span></div>'+
-      '<div class="bar"><i style="width:'+(B.hp/B.maxHp*100)+'%"></i></div>'+
-      '<div class="clock">'+
-        '<div class="row"><span class="who">你</span><span class="track"><i style="width:'+pPct+'%;background:#8f3226"></i></span><span class="tm">'+fmt(nextP)+' 秒</span></div>'+
-        '<div class="row"><span class="who">'+B.def.name+'</span><span class="track"><i style="width:'+mPct+'%;background:#2f5d62"></i></span><span class="tm">'+fmt(nextM)+' 秒</span></div>'+
+      '<div class="duo">'+
+        '<div class="row"><span class="who">它</span><span class="track"><i style="width:'+(B.hp/B.maxHp*100)+'%;background:#2f5d62"></i></span><span class="num">'+B.hp+' / '+B.maxHp+'</span></div>'+
+        '<div class="row"><span class="who">我</span><span class="track"><i style="width:'+(Math.max(0,S.hp)/st.hp*100)+'%;background:#8f3226"></i></span><span class="num">'+Math.round(S.hp)+' / '+st.hp+'</span></div>'+
       '</div>'+
       '<div class="poolrow"><span>破窍池 '+fmt(B.pool)+' / '+fmt(poolThreshold())+
         (B.guardFull?'　<b style="color:#2f5d62">水泡护体</b>':(B.guard?'　<b style="color:#2f5d62">壳已竖起</b>':''))+
