@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#8f3226">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>鼎图·山经 · 一等山狩</title>
+<style>
+:root{
+  --paper:#f3e9d4; --paper2:#ece0c5; --ink:#2a2118; --ink2:#5c4c38;
+  --red:#8f3226; --red2:#b24a36; --jade:#2f5d62; --gold:#8a6d3b;
+  --line:#c3ae8a; --dim:#9a8a70; --green:#2e7d4f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:#d9cdb4;color:var(--ink);
+  font-family:"楷体","KaiTi","STKaiti","宋体","SimSun",serif;
+  font-size:16px;-webkit-font-smoothing:antialiased;
+}
+#app{width:100vw;height:100vh;display:flex;flex-direction:column;background:var(--paper);overflow:hidden}
+header{
+  background:var(--red);color:#f6ecd8;padding:10px 20px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;flex-shrink:0;
+}
+header h1{font-size:23px;font-weight:400;letter-spacing:.24em}
+header .sub{font-size:12.6px;color:#f6ecd8aa;letter-spacing:.12em}
+header .spacer{margin-left:auto}
+.pill{font-size:13.8px;background:#f6ecd81a;border:1px solid #f6ecd83a;padding:3px 10px;color:#f6ecd8cc}
+.pill b{color:#fff;font-weight:400}
+.tab{font-family:inherit;font-size:14.4px;background:transparent;border:1px solid #f6ecd855;
+     color:#f6ecd8cc;padding:4px 14px;cursor:pointer;letter-spacing:.1em}
+.tab.on{background:#f6ecd8;color:var(--red);border-color:#f6ecd8}
+
+#stage{flex:1;min-height:0;position:relative}
+.screen{position:absolute;inset:0;display:none;overflow:hidden}
+#sHub.on,#sForge.on,#sBag.on{display:block;overflow-y:auto;padding:16px 22px}
+#sBattle.on{display:grid;grid-template-columns:330px 1fr 340px}
+#sBattle.on > *{min-height:0;overflow:hidden}
+
+.col{padding:14px 18px;overflow-y:auto;min-height:0}
+.col.left{border-right:1px solid var(--line);background:linear-gradient(180deg,#efe4cd,#f3e9d4)}
+.col.right{border-left:1px solid var(--line);background:linear-gradient(180deg,#efe4cd,#f3e9d4)}
+.col::-webkit-scrollbar,.log::-webkit-scrollbar,#sHub::-webkit-scrollbar,#sForge::-webkit-scrollbar,#sBag::-webkit-scrollbar{width:7px}
+.col::-webkit-scrollbar-thumb,.log::-webkit-scrollbar-thumb,#sHub::-webkit-scrollbar-thumb,#sForge::-webkit-scrollbar-thumb,#sBag::-webkit-scrollbar-thumb{background:#c3ae8a}
+
+h2{font-size:15px;font-weight:400;letter-spacing:.2em;color:var(--gold);
+   border-bottom:1px solid var(--line);padding-bottom:6px;margin:0 0 10px}
+h3{font-size:14.4px;font-weight:400;color:var(--ink2);margin:13px 0 6px;letter-spacing:.1em}
+
+.bar{height:11px;background:#e2d4bb;border:1px solid var(--line);margin:5px 0 2px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2));transition:width .3s}
+.bar.shield{height:7px}
+.bar.shield>i{background:linear-gradient(90deg,#2f5d62,#4b878d)}
+.lbl{display:flex;justify-content:space-between;font-size:13.8px;color:var(--ink2)}
+
+.btn{
+  font-family:inherit;font-size:15px;color:var(--ink);background:#f7efdd;
+  border:1px solid var(--line);padding:7px 14px;cursor:pointer;
+  letter-spacing:.08em;transition:.15s;text-align:center;
+}
+.btn:hover:not(:disabled){background:var(--red);color:#f6ecd8;border-color:var(--red)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.sm{font-size:13.2px;padding:4px 9px}
+.btn.red{background:var(--red);color:#f6ecd8;border-color:var(--red)}
+.btn.red:hover:not(:disabled){background:#72271d}
+.btn.wide{display:block;width:100%}
+
+.card{border:1px solid var(--line);background:#f7efdd;padding:11px 13px}
+.card .t{font-size:17.2px;letter-spacing:.06em}
+.part{display:flex;align-items:center;gap:9px;padding:7px 9px;font-size:14.4px;
+  border-bottom:1px dashed #d3c19f}
+.part:last-child{border-bottom:0}
+.part.dead{opacity:.38}
+.part .nm{width:74px;flex-shrink:0;letter-spacing:.06em}
+.part .type{font-size:12px;color:var(--dim);width:38px;flex-shrink:0}
+.part .dots{font-size:13.8px;letter-spacing:2px;color:var(--jade);flex-shrink:0;width:100px}
+.part .pct{font-size:13.2px;color:var(--gold);width:50px;text-align:right;flex-shrink:0}
+.part .skl{font-size:12.6px;color:var(--ink2);margin-left:auto;text-align:right;line-height:1.45}
+.part .core{color:var(--red);font-size:11.5px;border:1px solid #8f322655;padding:0 3px;margin-left:3px}
+.part.dead .dots{color:#b0a189}
+
+.log{height:100%;overflow-y:auto;font-size:13.8px;line-height:1.85;color:var(--ink2)}
+.log p{margin-bottom:2px;border-bottom:1px dotted #ded0b4;padding-bottom:1px}
+.log .hit{color:var(--red)}
+.log .brk{color:#7a4bb5}
+.log .mat{color:var(--jade)}
+.log .ok{color:var(--green)}
+.log .bad{color:#a33a2a}
+
+.mid{display:flex;flex-direction:column;min-height:0}
+.midhead{padding:12px 20px 0;flex-shrink:0}
+.beastrow{display:flex;align-items:center;gap:11px}
+.beastrow .n{font-size:21.9px;letter-spacing:.16em}
+.beastrow .g{font-size:12px;color:var(--jade);border:1px solid #2f5d6255;padding:1px 6px;letter-spacing:.1em}
+.beastrow .e{font-size:12px;color:#8f3226;border:1px solid #8f322655;padding:1px 6px;letter-spacing:.1em}
+.midbody{flex:1;padding:10px 20px;overflow-y:auto;min-height:0}
+
+.clock{margin:10px 0 12px;border:1px solid var(--line);background:#efe3cb;padding:9px 11px}
+.clock .row{display:flex;align-items:center;gap:9px;font-size:13.8px;margin:4px 0}
+.clock .row .who{width:66px;color:var(--ink2);flex-shrink:0}
+.clock .row .track{flex:1;height:7px;background:#ddd0b4;border:1px solid #cbb896}
+.clock .row .track>i{display:block;height:100%}
+.clock .row .tm{width:74px;text-align:right;color:var(--dim);font-size:12.6px;flex-shrink:0}
+
+.actions{padding:11px 20px;border-top:1px solid var(--line);background:#efe3cb;flex-shrink:0}
+.wslots{display:flex;gap:8px;margin-bottom:8px}
+.ws{flex:1;border:1px solid var(--line);background:#f7efdd;padding:5px 9px;cursor:pointer;font-size:13.2px;transition:.13s}
+.ws:hover{background:#fff8e8}
+.ws.on{border-color:var(--red);background:#fff5e4;box-shadow:inset 0 0 0 1px #8f322644}
+.ws.empty{opacity:.4;cursor:default}
+.ws .n{display:flex;justify-content:space-between}
+.ws .n small{color:var(--dim)}
+.skills{display:flex;gap:9px;flex-wrap:wrap}
+.sk{flex:1;min-width:150px;border:1px solid var(--line);background:#f7efdd;padding:8px 11px;cursor:pointer;transition:.13s}
+.sk:hover{background:#fff8e8}
+.sk.sel{border-color:var(--red);background:#fff5e4;box-shadow:inset 0 0 0 1px #8f322644}
+.sk .a{font-size:15.5px;letter-spacing:.06em;display:flex;justify-content:space-between}
+.sk .a small{font-size:12.6px;color:var(--dim);font-weight:400}
+.sk .b{font-size:12.6px;color:var(--ink2);margin-top:3px;line-height:1.5}
+
+.overlay{position:absolute;inset:0;background:#2a2118e0;display:flex;align-items:center;justify-content:center;padding:24px;z-index:30}
+.sheet{background:var(--paper);border:1px solid var(--line);width:min(920px,100%);max-height:100%;overflow-y:auto;padding:26px 30px}
+.sheet h2{border:0;font-size:20.7px;letter-spacing:.2em;color:var(--ink);margin-bottom:14px}
+.sheet p{font-size:15px;line-height:1.9;color:var(--ink2);margin-bottom:7px}
+.sheet .k{color:var(--red)}
+.tag{font-size:12px;padding:1px 6px;border:1px solid currentColor;letter-spacing:.06em;margin-left:4px}
+.q-完璧{color:#a8781f}.q-精奇{color:#2f5d62}.q-寻常{color:#6b5a42}.q-残缺{color:#9a3b2a}
+.hr{height:1px;background:var(--line);margin:14px 0}
+.muted{color:var(--dim);font-size:13.2px;line-height:1.7}
+.inv{display:flex;justify-content:space-between;font-size:13.8px;padding:4px 0;border-bottom:1px dotted #d8c8a8}
+.inv:last-child{border-bottom:0}
+.slot{display:flex;justify-content:space-between;align-items:center;font-size:14.4px;padding:5px 0;border-bottom:1px dotted #d8c8a8}
+.rbtn{font-family:inherit;font-size:12.6px;background:transparent;border:1px solid var(--line);color:var(--ink2);padding:2px 8px;cursor:pointer;margin-left:6px}
+.rbtn:hover{background:var(--red);color:#f6ecd8;border-color:var(--red)}
+.rbtn.on{background:var(--red);color:#f6ecd8;border-color:var(--red)}
+.seal-row{display:flex;justify-content:space-between;font-size:13.8px;padding:3px 0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.details{font-size:12.6px;color:var(--dim);line-height:1.65}
+.beastgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.hublayout{display:flex;gap:18px;align-items:flex-start}
+.hubmain{flex:1;min-width:0}
+.hubside{width:370px;flex-shrink:0}
+.forgelayout{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:13.2px}
+.statgrid>div{display:flex;justify-content:space-between;color:#6b5a42;border-bottom:1px dotted #e2d6bd;padding:2px 0}
+.statgrid>div:nth-child(odd){padding-right:12px;border-right:1px solid #e2d6bd}
+.statgrid>div:nth-child(even){padding-left:12px}
+.sect{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.gradehead{font-size:13.8px;color:#8a6d3b;letter-spacing:.2em;margin-bottom:8px}
+@media (max-width: 860px){
+  header{padding:7px 8px;gap:4px;flex-wrap:wrap;row-gap:4px}
+  header h1{font-size:15px;letter-spacing:.04em}
+  header .sub{display:none}
+  header .spacer{display:none}
+  .pill{font-size:10.5px;padding:1px 4px}
+  .kp{display:none}
+  .tab{font-size:12px;padding:2px 6px}
+  header .btn.sm{font-size:11.5px;padding:2px 6px}
+  #app,#stage{overflow-x:hidden;max-width:100vw}
+  .beastgrid>div,.card{min-width:0;overflow-wrap:anywhere}
+  #sHub.on,#sForge.on,#sBag.on{padding:10px 10px}
+  #sBattle.on{display:flex;flex-direction:column;overflow-y:auto}
+  .col{padding:10px 12px;max-height:none;overflow:visible;flex:0 0 auto}
+  .col.left{border-right:0;border-bottom:1px solid var(--line);order:2}
+  .mid{display:block;min-height:0;flex:0 0 auto;order:1}
+  .midbody{overflow:visible;max-height:none}
+  .col.right{border-left:0;border-top:1px solid var(--line);max-height:none;order:3}
+  .actions{position:sticky;bottom:0;z-index:6;box-shadow:0 -6px 12px #0000001a}
+  .log{height:auto;max-height:44vh}
+  .hublayout,.forgelayout{flex-direction:column;align-items:stretch}
+  .hubmain,.hubside{width:100%;min-width:0}
+  .beastgrid{grid-template-columns:1fr}
+  .grid3,.grid2{grid-template-columns:1fr}
+  .skills{flex-direction:column}
+  .sk{min-width:0;width:100%}
+  .wslots{flex-wrap:wrap}
+  .ws{min-width:calc(50% - 4px)}
+  .btn{font-size:16px;padding:11px 14px}
+  .btn.sm{font-size:14px;padding:7px 10px}
+  .rbtn{font-size:14px;padding:6px 10px}
+  .part{flex-wrap:wrap;gap:6px;padding:8px}
+  .part .nm{width:auto}
+  .part .skl{margin-left:0;text-align:left;width:100%}
+  .actions{padding:10px 12px}
+  .midhead{padding:10px 12px 0}
+  .midbody{padding:8px 12px}
+  .sheet{padding:18px 16px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>鼎图·山经</h1>
+    <span class="sub">卷一 · 一等山狩</span>
+    <button class="tab on" id="tabHub" onclick="renderHub()">山 门</button>
+    <button class="tab" id="tabBag" onclick="renderBag()">囊</button>
+    <button class="tab" id="tabForge" onclick="renderForge()">鼎 工 处</button>
+    <span class="spacer"></span>
+    <span class="pill">贝 <b id="hudCoins">0</b></span>
+    <span class="pill">行速 <b id="hudSpeed">100</b></span>
+    <span class="pill kp">击杀 <b id="hudKills">0</b></span>
+    <button class="btn sm" id="btnHelp">释 义</button>
+    <button class="btn sm" id="btnReset">重 开</button>
+  </header>
+  <main id="stage">
+    <section id="sHub" class="screen"></section>
+    <section id="sBag" class="screen"></section>
+    <section id="sForge" class="screen"></section>
+    <section id="sBattle" class="screen"></section>
+  </main>
+</div>
+
+<script>
+/* ==================== 常量 ==================== */
+const GRADES = ['常兽','异兽','怪兽','妖兽','灵兽','神兽','凶兽'];
+const QF = {完璧:1.2, 精奇:1.0, 寻常:0.8, 残缺:0.5};
+const QFIX = {完璧:2, 精奇:0, 寻常:-1, 残缺:-2};
+const QSEAL = {完璧:3, 精奇:2, 寻常:1, 残缺:0};
+const QNEXT = {完璧:'精奇', 精奇:'寻常', 寻常:'残缺', 残缺:null};
+const QDESC = {完璧:'数值 +2　防具三印', 精奇:'数值 ±0　防具两印',
+               寻常:'数值 −1　防具一印', 残缺:'数值 −2　防具无印'};
+const SEAL_TIERS = {
+  '固守':{need:[3,6,9], desc:['受伤 −8%','受伤 −14%','受伤 −22%'], val:[0.08,0.14,0.22]},
+  '疾行':{need:[3,6,9], desc:['行速 +5','行速 +10','行速 +16'], val:[5,10,16]},
+  '锐锋':{need:[3,6,9], desc:['神通伤害 +1','+3','+5'], val:[1,3,5]},
+  '坚壁':{need:[3,6,9], desc:['体 +8','体 +18','体 +32'], val:[8,18,32]},
+  '疾风':{need:[3,6,9], desc:['出手重 −5','−10','−16'], val:[5,10,16]}
+};
+const KE = {'金':'木','木':'土','土':'水','水':'火','火':'金'};
+function elemMul(atk, def){
+  if(!atk || !def) return 1;
+  if(KE[atk] === def) return 1.3;
+  if(KE[def] === atk) return 0.85;
+  return 1;
+}
+
+/* ==================== 兽 ==================== */
+const BEASTS = {
+  xuangui:{ id:'xuangui', name:'旋龟', grade:0, hp:80, speed:80, reward:20, elem:'水',
+    lore:'怪水出焉，而东流注于宪翼之水。其中多旋龟，其状如龟而鸟首虺尾，其音如判木，佩之不聋。',
+    hint:'守。壳厚，会缩。五窍十六点，把十点砸在三处。',
+    parts:[
+      {id:'head',name:'鸟首',type:'头',max:4,kind:'passive',sk:{name:'磐守',desc:'常驻减伤 20%',reduce:0.2}},
+      {id:'shell',name:'龟甲',type:'躯干',max:4,kind:'active',sk:{name:'缩壳',desc:'下次受击减半',weight:100,cd:2,guard:true}},
+      {id:'tail',name:'虺尾',type:'外附',max:2,core:true,kind:'active',sk:{name:'尾鞭',desc:'伤害 6',weight:90,cd:1,dmg:6}},
+      {id:'fore',name:'前肢',type:'手',max:3,kind:'active',sk:{name:'拨水',desc:'伤害 3',weight:80,cd:1,dmg:3}},
+      {id:'hind',name:'后蹼',type:'足',max:3,kind:'active',sk:{name:'沉重',desc:'伤害 2',weight:105,cd:1,dmg:2}}
+    ], mats:{head:'鸟喙骨',shell:'龟甲片',tail:'虺尾筋',fore:'前肢骨',hind:'后蹼'} },
+  huan:{ id:'huan', name:'讙', grade:0, hp:70, speed:120, reward:22, elem:'金',
+    lore:'翼望之山，有兽焉，其状如狸，一目而三尾，名曰讙，其音如夺百声，可以御凶。',
+    hint:'扰。快，出手密。它的手是三尾，独目只有两点。',
+    parts:[
+      {id:'eye',name:'独目',type:'头',max:4,kind:'passive',sk:{name:'夺声',desc:'你出手后 35% 被偷气',steal:0.35}},
+      {id:'tails',name:'三尾',type:'外附',max:2,core:true,kind:'active',sk:{name:'三尾拂',desc:'伤害 5',weight:70,cd:1,dmg:5}},
+      {id:'body',name:'狸身',type:'躯干',max:4,kind:'active',sk:{name:'狸突',desc:'伤害 3',weight:100,cd:2,dmg:3}},
+      {id:'paw',name:'前爪',type:'手',max:3,kind:'active',sk:{name:'抓挠',desc:'伤害 2',weight:75,cd:1,dmg:2}},
+      {id:'foot',name:'后足',type:'足',max:3,kind:'active',sk:{name:'疾跳',desc:'伤害 2',weight:70,cd:1,dmg:2}}
+    ], mats:{eye:'讙目',tails:'三尾毫',body:'狸纹皮',paw:'爪甲',foot:'蹼骨'} },
+  bifang:{ id:'bifang', name:'毕方', grade:0, hp:76, speed:95, reward:26, elem:'火',
+    lore:'章莪之山，有鸟焉，其状如鹤，一足，赤文青质而白喙，名曰毕方，见则其邑有讹火。',
+    hint:'攻。它只有一只脚。痛，会烧，挨近它还反伤。',
+    parts:[
+      {id:'foot',name:'独足',type:'足',max:2,core:true,kind:'active',sk:{name:'蹈炎',desc:'伤害 5',weight:110,cd:1,dmg:5}},
+      {id:'beak',name:'白喙',type:'头',max:4,kind:'active',sk:{name:'啄火',desc:'伤害 3，灼烧 2',weight:85,cd:2,dmg:3,burn:2}},
+      {id:'chest',name:'赤纹',type:'躯干',max:4,kind:'passive',sk:{name:'火身',desc:'被击反伤 2',thorns:2}},
+      {id:'wing',name:'残翼',type:'外附',max:3,kind:'active',sk:{name:'扇火',desc:'伤害 2，灼烧 1',weight:75,cd:1,dmg:2,burn:1}},
+      {id:'claw',name:'铁爪',type:'手',max:3,kind:'active',sk:{name:'撕',desc:'伤害 3',weight:80,cd:1,dmg:3}}
+    ], mats:{foot:'蹈炎足筋',beak:'白喙',chest:'赤纹羽',wing:'翼羽',claw:'铁爪'} },
+  xingxing:{ id:'xingxing', name:'狌狌', grade:0, hp:82, speed:135, reward:26, elem:'木',
+    lore:'招摇之山，有兽焉，其状如禺而白耳，伏行人走，其名曰狌狌，食之善走。',
+    hint:'疾。它比你快，而且越打越快。白耳是它的图。',
+    parts:[
+      {id:'ear',name:'白耳',type:'头',max:4,kind:'passive',sk:{name:'善走',desc:'每出手自身行速 +5',selfSpeed:5}},
+      {id:'arm',name:'长臂',type:'手',max:4,kind:'active',sk:{name:'猿臂',desc:'伤害 4',weight:80,cd:1,dmg:4}},
+      {id:'leg',name:'后足',type:'足',max:2,core:true,kind:'active',sk:{name:'疾走',desc:'伤害 5，令你迟滞',weight:60,cd:2,dmg:5,slow:{turns:3,amt:18}}},
+      {id:'body',name:'禺身',type:'躯干',max:3,kind:'active',sk:{name:'扑',desc:'伤害 3',weight:75,cd:1,dmg:3}},
+      {id:'tail',name:'长尾',type:'外附',max:3,kind:'active',sk:{name:'扫尾',desc:'伤害 2',weight:70,cd:1,dmg:2}}
+    ], mats:{ear:'白耳',arm:'猿臂骨',leg:'疾足筋',body:'禺皮',tail:'尾梢'} },
+  chiru:{ id:'chiru', name:'赤鱬', grade:0, hp:92, speed:85, reward:28, elem:'水',
+    lore:'青丘之山，英水出焉……其中多赤鱬，其状如鱼而人面，其音如鸳鸯，食之不疥。',
+    hint:'盾。它会给自己吐泡，珠子在人面那一处。',
+    parts:[
+      {id:'face',name:'人面',type:'头',max:2,core:true,kind:'active',sk:{name:'泣珠',desc:'下一次受击全免',weight:105,cd:3,guardFull:true}},
+      {id:'body',name:'鱼身',type:'躯干',max:5,kind:'active',sk:{name:'摆尾',desc:'伤害 3',weight:95,cd:1,dmg:3}},
+      {id:'scale',name:'珠鳞',type:'外附',max:4,kind:'passive',sk:{name:'鳞护',desc:'常驻减伤 15%',reduce:0.15}},
+      {id:'gill',name:'鱼鳃',type:'头',max:3,kind:'active',sk:{name:'吐水',desc:'伤害 2，令你手沉',weight:85,cd:2,dmg:2,weightUp:25}},
+      {id:'fin',name:'腹鳍',type:'外附',max:2,kind:'active',sk:{name:'潜',desc:'伤害 2',weight:70,cd:1,dmg:2}}
+    ], mats:{face:'人面珠',body:'鱼身肉',scale:'珠鳞',gill:'鱼鳃',fin:'腹鳍'} },
+  pi:{ id:'pi', name:'罴', grade:0, hp:105, speed:72, reward:32, elem:'土',
+    lore:'北山经之境，有兽焉，其状如麋，其音如呼，见则其邑有雨。俗谓之罴。',
+    hint:'钝。最厚最慢，一吼就让你走不动。熊首是它的图。',
+    parts:[
+      {id:'head',name:'熊首',type:'头',max:6,kind:'active',sk:{name:'怒吼',desc:'令你行速 −20 · 3 回合',weight:110,cd:3,dmg:0,slow:{turns:3,amt:20}}},
+      {id:'body',name:'巨躯',type:'躯干',max:2,core:true,kind:'active',sk:{name:'扑压',desc:'伤害 8',weight:120,cd:2,dmg:8}},
+      {id:'paw',name:'厚掌',type:'手',max:4,kind:'active',sk:{name:'拍击',desc:'伤害 4',weight:95,cd:1,dmg:4}},
+      {id:'leg',name:'后腿',type:'足',max:3,kind:'active',sk:{name:'震地',desc:'伤害 3',weight:100,cd:1,dmg:3}},
+      {id:'fur',name:'背毛',type:'外附',max:2,kind:'passive',sk:{name:'厚皮',desc:'常驻减伤 25%',reduce:0.25}}
+    ], mats:{head:'熊首骨',body:'巨躯肉',paw:'厚掌皮',leg:'后腿筋',fur:'背毛'} },
+  zhunu:{ id:'zhunu', name:'朱獳', grade:0, hp:78, speed:100, reward:27, elem:'木',
+    lore:'姑逢之山，有兽焉，其状如狐而鱼翼，其名曰朱獳，其音如婴儿，见则其国有恐。',
+    hint:'乱。它一叫，你就不知道下一击会落在哪。',
+    parts:[
+      {id:'head',name:'狐首',type:'头',max:4,kind:'active',sk:{name:'婴啼',desc:'令你手沉 +25',weight:90,cd:2,dmg:0,weightUp:25}},
+      {id:'wing',name:'鱼翼',type:'外附',max:2,core:true,kind:'active',sk:{name:'乱翅',desc:'伤害 4，你下一击乱落',weight:80,cd:2,dmg:4,scrambleOne:true}},
+      {id:'body',name:'狐身',type:'躯干',max:4,kind:'active',sk:{name:'噬',desc:'伤害 4',weight:85,cd:1,dmg:4}},
+      {id:'leg',name:'四足',type:'足',max:3,kind:'active',sk:{name:'窜',desc:'伤害 2',weight:65,cd:1,dmg:2}},
+      {id:'tail',name:'尾',type:'外附',max:3,kind:'active',sk:{name:'扫',desc:'伤害 2',weight:70,cd:1,dmg:2}}
+    ], mats:{head:'狐首',wing:'鱼翼膜',body:'狐皮',leg:'足爪',tail:'尾毛'} },
+  tiangou:{ id:'tiangou', name:'天狗', grade:0, hp:88, speed:105, reward:28, elem:'金',
+    lore:'阴山，有兽焉，其状如狸而白首，名曰天狗，其音如榴榴，可以御凶。',
+    hint:'克。白首一抬，你的刀就有三成会落空。',
+    parts:[
+      {id:'head',name:'白首',type:'头',max:4,kind:'passive',sk:{name:'御凶',desc:'你出手 30% 落空',miss:0.3}},
+      {id:'body',name:'狸身',type:'躯干',max:5,kind:'active',sk:{name:'扑咬',desc:'伤害 5',weight:95,cd:2,dmg:5}},
+      {id:'teeth',name:'利齿',type:'手',max:2,core:true,kind:'active',sk:{name:'啮',desc:'伤害 6',weight:85,cd:1,dmg:6}},
+      {id:'leg',name:'四足',type:'足',max:3,kind:'active',sk:{name:'奔',desc:'伤害 2',weight:65,cd:1,dmg:2}},
+      {id:'tail',name:'长尾',type:'外附',max:3,kind:'active',sk:{name:'甩尾',desc:'伤害 2',weight:75,cd:1,dmg:2}}
+    ], mats:{head:'白首骨',body:'狸身皮',teeth:'利齿',leg:'足筋',tail:'长尾'} },
+  guanguan:{ id:'guanguan', name:'灌灌', grade:0, hp:75, speed:110, reward:25, elem:'木',
+    lore:'青丘之山，有鸟焉，其状如鸠，其音若呵，名曰灌灌，佩之不迷。',
+    hint:'迷。它一叫你就分不清方向，刀下得也沉。',
+    parts:[
+      {id:'head',name:'鸠首',type:'头',max:3,kind:'active',sk:{name:'迷声',desc:'令你下一击完全乱落',weight:85,cd:3,dmg:0,scrambleOne:true}},
+      {id:'feather',name:'彩羽',type:'外附',max:4,kind:'active',sk:{name:'扑翅',desc:'伤害 3',weight:75,cd:1,dmg:3}},
+      {id:'body',name:'鸠身',type:'躯干',max:4,kind:'active',sk:{name:'啄',desc:'伤害 3',weight:80,cd:1,dmg:3}},
+      {id:'leg',name:'双足',type:'足',max:3,kind:'active',sk:{name:'跳',desc:'伤害 2',weight:70,cd:1,dmg:2}},
+      {id:'pipe',name:'鸣管',type:'头',max:2,core:true,kind:'active',sk:{name:'长鸣',desc:'伤害 4，你神通增重',weight:90,cd:2,dmg:4,weightUp:25}}
+    ], mats:{head:'鸠首',feather:'彩羽',body:'鸠肉',leg:'足爪',pipe:'鸣管'} },
+
+  /* ---------- 二等异兽 ---------- */
+  qiongqi:{ id:'qiongqi', name:'穷奇', grade:1, hp:140, speed:90, reward:48, elem:'金',
+    lore:'邽山，其上有兽焉，其状如牛，猬毛，名曰穷奇，音如嗥狗，是食人。',
+    hint:'嗜血。你砍下的每一刀，它都在往回吸。',
+    parts:[
+      {id:'head',name:'穷奇首',type:'头',max:5,kind:'passive',sk:{name:'嗜血',desc:'每次命中你回 3 血',lifestealSelf:3}},
+      {id:'back',name:'猬毛',type:'外附',max:3,core:true,kind:'passive',sk:{name:'刺阵',desc:'被击反伤 3',thorns:3}},
+      {id:'claw',name:'利爪',type:'手',max:4,kind:'active',sk:{name:'裂爪',desc:'伤害 6',weight:90,cd:1,dmg:6}},
+      {id:'tail',name:'长尾',type:'外附',max:3,kind:'active',sk:{name:'扫尾',desc:'伤害 4',weight:80,cd:1,dmg:4}},
+      {id:'wing',name:'肉翼',type:'外附',max:3,kind:'active',sk:{name:'扑',desc:'伤害 5',weight:95,cd:2,dmg:5}},
+      {id:'belly',name:'软腹',type:'躯干',max:2,kind:'active',sk:{name:'滚撞',desc:'伤害 3',weight:75,cd:1,dmg:3}}
+    ], mats:{head:'穷奇首',back:'猬毛',claw:'穷奇利爪',tail:'穷奇尾',wing:'肉翼',belly:'软腹'} },
+  gudiao:{ id:'gudiao', name:'蛊雕', grade:1, hp:125, speed:110, reward:45, elem:'火',
+    lore:'鹿吴之山……有兽焉，名曰蛊雕，其状如雕而有角，其音如婴儿之音，是食人。',
+    hint:'蓄杀。两只角一低，下一轮就是要命的。',
+    parts:[
+      {id:'horns',name:'双角',type:'头',max:3,core:true,kind:'active',sk:{name:'角撞',desc:'蓄力，下一轮伤害翻倍',weight:120,cd:3,dmg:3,charge:true}},
+      {id:'beak',name:'金喙',type:'头',max:5,kind:'active',sk:{name:'啄',desc:'伤害 5',weight:85,cd:1,dmg:5}},
+      {id:'wing',name:'雕翼',type:'外附',max:4,kind:'active',sk:{name:'风袭',desc:'伤害 4，令你迟滞',weight:80,cd:2,dmg:4,slow:{turns:2,amt:15}}},
+      {id:'claw',name:'鹰爪',type:'手',max:3,kind:'active',sk:{name:'抓',desc:'伤害 4',weight:80,cd:1,dmg:4}},
+      {id:'chest',name:'绒胸',type:'躯干',max:3,kind:'passive',sk:{name:'绒护',desc:'常驻减伤 15%',reduce:0.15}},
+      {id:'eye',name:'凶眼',type:'头',max:2,kind:'passive',sk:{name:'逼视',desc:'你出手 10% 落空',miss:0.1}}
+    ], mats:{horns:'蛊雕角',beak:'蛊雕喙',wing:'雕翼',claw:'鹰爪',chest:'绒胸',eye:'蛊雕凶眼'} },
+  tulou:{ id:'tulou', name:'土蝼', grade:1, hp:135, speed:85, reward:46, elem:'土',
+    lore:'昆仑之丘……有兽焉，其状如羊而四角，名曰土蝼，是食人。',
+    hint:'多撞。四只角，一次能撞两下。',
+    parts:[
+      {id:'horns',name:'四角',type:'头',max:3,core:true,kind:'active',sk:{name:'四撞',desc:'伤害 6，分两段',weight:110,cd:2,dmg:6,multi:2}},
+      {id:'body',name:'羊身',type:'躯干',max:5,kind:'active',sk:{name:'撞',desc:'伤害 5',weight:100,cd:1,dmg:5}},
+      {id:'hoof',name:'蹄',type:'足',max:4,kind:'active',sk:{name:'踏',desc:'伤害 4',weight:90,cd:1,dmg:4}},
+      {id:'back',name:'厚背',type:'躯干',max:3,kind:'passive',sk:{name:'厚背',desc:'常驻减伤 20%',reduce:0.2}},
+      {id:'wool',name:'白毛',type:'外附',max:3,kind:'passive',sk:{name:'缠毛',desc:'被击反伤 2',thorns:2}},
+      {id:'eye',name:'横目',type:'头',max:2,kind:'passive',sk:{name:'横视',desc:'你落点被打乱',scramble:true}}
+    ], mats:{horns:'四角残片',body:'羊身',hoof:'羊蹄',back:'厚背皮',wool:'白毛',eye:'横目'} }
+};
+
+/* ==================== 器 ==================== */
+const RECIPES = [
+  {id:'w0', name:'残鼎刀', kind:'weapon', base:true, grade:0, mats:{}, coins:0, elem:'',
+   sks:[{name:'劈',desc:'伤害 6｜无偏',dmg:6,weight:100}]},
+  {id:'w1', name:'龟甲鞭', kind:'weapon', grade:0, elem:'水', mats:{'xuangui:shell':2,'xuangui:hind':1}, coins:18,
+   sks:[{name:'甲鞭',desc:'伤 7，迟缓 0.15｜偏外附×3',dmg:7,weight:85,slow:0.15,aim:{'外附':3,'躯干':1.5,'头':0.3}}]},
+  {id:'w2', name:'狸纹爪', kind:'weapon', grade:0, elem:'金', mats:{'huan:paw':2,'huan:body':1}, coins:20,
+   sks:[{name:'连爪',desc:'伤 8，30% 再抽 3｜偏外附×3.5',dmg:8,weight:92,extra:{chance:0.3,dmg:3},aim:{'外附':3.5,'头':0.22}}]},
+  {id:'w3', name:'毕方喙', kind:'weapon', grade:0, elem:'火', mats:{'bifang:beak':1,'bifang:wing':1}, coins:24,
+   sks:[{name:'啄火',desc:'伤 7，灼烧 2｜偏头×3',dmg:7,weight:95,burn:2,aim:{'头':3,'躯干':1.5,'足':0.35}}]},
+  {id:'w4', name:'猿臂棍', kind:'weapon', grade:0, elem:'木', mats:{'xingxing:arm':2}, coins:26,
+   sks:[{name:'猿臂',desc:'伤 9｜偏手×3.2',dmg:9,weight:90,aim:{'手':3.2,'足':1.2,'头':0.3}}]},
+  {id:'w5', name:'珠鳞刃', kind:'weapon', grade:0, elem:'水', mats:{'chiru:scale':2}, coins:28,
+   sks:[{name:'珠鳞',desc:'伤 9，破甲｜偏躯干×2.6',dmg:9,weight:92,pierce:true,aim:{'躯干':2.6,'外附':1.5}}]},
+  {id:'w6', name:'熊首槌', kind:'weapon', grade:0, elem:'土', mats:{'pi:head':2,'pi:paw':1}, coins:32,
+   sks:[{name:'扑压',desc:'伤 12｜极重，偏躯干×2.2',dmg:12,weight:125,aim:{'躯干':2.2,'手':1.4}}]},
+  {id:'w7', name:'狐尾扇', kind:'weapon', grade:0, elem:'木', mats:{'zhunu:tail':2,'zhunu:body':1}, coins:26,
+   sks:[{name:'扇尾',desc:'伤 7｜偏外附×4',dmg:7,weight:80,aim:{'外附':4,'头':0.2}}]},
+  {id:'w8', name:'白首刃', kind:'weapon', grade:0, elem:'金', mats:{'tiangou:head':2,'tiangou:body':1}, coins:30,
+   sks:[{name:'白刃',desc:'伤 8，破甲｜偏头×2.6',dmg:8,weight:86,pierce:true,aim:{'头':2.6,'手':1.5}}]},
+  {id:'w9', name:'彩羽镖', kind:'weapon', grade:0, elem:'木', mats:{'guanguan:feather':2}, coins:24,
+   sks:[{name:'羽镖',desc:'伤 6｜极轻，偏头×3',dmg:6,weight:68,aim:{'头':3,'外附':1.2}}]},
+
+  {id:'w10', name:'穷奇爪', kind:'weapon', grade:1, elem:'金', mats:{'qiongqi:claw':2}, coins:62,
+   sks:[{name:'裂爪',desc:'伤 10，出血 3 回合｜偏手×2.6',dmg:10,weight:95,bleed:3,aim:{'手':2.6,'躯干':1.4}},
+        {name:'威吓',desc:'伤 6，令敌气量 +40',dmg:6,weight:80,delayEnemy:40}]},
+  {id:'w11', name:'蛊雕喙', kind:'weapon', grade:1, elem:'火', mats:{'gudiao:beak':1,'gudiao:wing':1}, coins:58,
+   sks:[{name:'蓄啄',desc:'伤 9，下一击 ×2｜偏头×2.8',dmg:9,weight:110,charge:true,aim:{'头':2.8,'外附':1.3}},
+        {name:'火羽',desc:'伤 6，灼烧 3｜偏外附×2.4',dmg:6,weight:85,burn:3,aim:{'外附':2.4}}]},
+  {id:'w12', name:'羊蹄槌', kind:'weapon', grade:1, elem:'土', mats:{'tulou:hoof':2,'tulou:body':1}, coins:60,
+   sks:[{name:'四连',desc:'伤 11，分四段｜偏头×2.4',dmg:11,weight:105,multi:4,aim:{'头':2.4,'躯干':1.5}},
+        {name:'震地',desc:'伤 7，迟敌 0.4｜偏足×2.5',dmg:7,weight:95,slow:0.4,aim:{'足':2.5}}]},
+
+  {id:'t1', name:'虺尾佩', kind:'trinket', grade:0, mats:{'xuangui:tail':1}, coins:18, pas:[{name:'缠骨',reduce:0.12}]},
+  {id:'t2', name:'三尾珠', kind:'trinket', grade:0, mats:{'huan:tails':1}, coins:18, pas:[{name:'夺声',every:3,bonus:6,aim:{'外附':2}}]},
+  {id:'t3', name:'蹈炎珮', kind:'trinket', grade:0, mats:{'bifang:foot':1}, coins:20, pas:[{name:'蹈炎',fireChance:0.25,fireDmg:5}]},
+  {id:'t4', name:'疾足佩', kind:'trinket', grade:0, mats:{'xingxing:leg':1}, coins:20, pas:[{name:'善走',speed:8}]},
+  {id:'t5', name:'泣珠', kind:'trinket', grade:0, mats:{'chiru:face':1}, coins:22, pas:[{name:'泣珠',healOnHit:4}]},
+  {id:'t6', name:'巨躯骨', kind:'trinket', grade:0, mats:{'pi:body':1}, coins:24, pas:[{name:'厚皮',hp:16}]},
+  {id:'t7', name:'翼铃', kind:'trinket', grade:0, mats:{'zhunu:wing':1}, coins:22, pas:[{name:'婴啼',delayChance:0.25,delay:0.35}]},
+  {id:'t8', name:'犬牙符', kind:'trinket', grade:0, mats:{'tiangou:teeth':1}, coins:24, pas:[{name:'御凶',dodge:0.15}]},
+  {id:'t9', name:'鸣管羽', kind:'trinket', grade:0, mats:{'guanguan:pipe':1}, coins:20, pas:[{name:'不迷',speedStack:1,speedCap:12}]},
+  {id:'t10',name:'鹰目', kind:'trinket', grade:0, mats:{'huan:tails':1,'huan:paw':1}, coins:26, pas:[{name:'鹰目',crit:0.18}]},
+  {id:'t11',name:'噬血珠', kind:'trinket', grade:0, mats:{'chiru:face':1,'chiru:scale':1}, coins:28, pas:[{name:'噬血',lifesteal:0.14}]},
+  {id:'t12',name:'息壤囊', kind:'trinket', grade:0, mats:{'pi:body':1,'pi:fur':1}, coins:28, pas:[{name:'息壤',shield:15}]},
+  {id:'t13',name:'穷奇牙', kind:'trinket', grade:1, mats:{'qiongqi:back':1}, coins:58,
+   pas:[{name:'獠牙',crit:0.20},{name:'嗜血',lifesteal:0.10}]},
+  {id:'t14',name:'蛊雕角佩', kind:'trinket', grade:1, mats:{'gudiao:horns':1}, coins:55,
+   pas:[{name:'疾视',speed:8},{name:'锐始',firstStrike:0.30}]},
+  {id:'t15',name:'土蝼角', kind:'trinket', grade:1, mats:{'tulou:horns':1}, coins:56,
+   pas:[{name:'犄角',hp:20},{name:'骨甲',armor:3}]}, 
+
+  {id:'g_head',name:'龟甲盔',kind:'armor',grade:0,slot:'head',seal:'固守',mats:{'xuangui:shell':1,'xuangui:head':1},coins:14,armor:{hp:3,armor:2}},
+  {id:'g_body',name:'龟甲衣',kind:'armor',grade:0,slot:'body',seal:'固守',mats:{'xuangui:shell':2},coins:16,armor:{hp:6,armor:3}},
+  {id:'g_legs',name:'龟甲裙',kind:'armor',grade:0,slot:'legs',seal:'固守',mats:{'xuangui:shell':1,'xuangui:hind':1},coins:14,armor:{hp:3,armor:2}},
+  {id:'g_hand',name:'赤羽护',kind:'armor',grade:0,slot:'hand',seal:'固守',mats:{'bifang:chest':1,'chiru:gill':1},coins:12,armor:{}},
+  {id:'g_foot',name:'龟足裹',kind:'armor',grade:0,slot:'foot',seal:'固守',mats:{'xuangui:head':1},coins:10,armor:{reduce:0.02}},
+  {id:'j_head',name:'狐纹兜',kind:'armor',grade:0,slot:'head',seal:'疾行',mats:{'zhunu:head':1,'huan:eye':1},coins:14,armor:{}},
+  {id:'j_body',name:'羽行衣',kind:'armor',grade:0,slot:'body',seal:'疾行',mats:{'bifang:wing':1,'huan:body':1},coins:16,armor:{hp:3}},
+  {id:'j_legs',name:'狐尾裈',kind:'armor',grade:0,slot:'legs',seal:'疾行',mats:{'zhunu:tail':2},coins:12,armor:{speed:2}},
+  {id:'j_hand',name:'狐足手',kind:'armor',grade:0,slot:'hand',seal:'疾行',mats:{'zhunu:leg':2},coins:12,armor:{}},
+  {id:'j_foot',name:'犬尾履',kind:'armor',grade:0,slot:'foot',seal:'疾行',mats:{'tiangou:tail':1,'huan:foot':1},coins:10,armor:{speed:3}},
+  {id:'r_head',name:'骨盔',kind:'armor',grade:0,slot:'head',seal:'锐锋',mats:{'xuangui:fore':1,'bifang:claw':1},coins:14,armor:{}},
+  {id:'r_body',name:'骨甲',kind:'armor',grade:0,slot:'body',seal:'锐锋',mats:{'xuangui:hind':1,'xuangui:shell':1},coins:16,armor:{hp:4}},
+  {id:'r_legs',name:'骸裙',kind:'armor',grade:0,slot:'legs',seal:'锐锋',mats:{'gudiao:claw':1,'gudiao:eye':1},coins:14,armor:{}},
+  {id:'r_hand',name:'爪护',kind:'armor',grade:0,slot:'hand',seal:'锐锋',mats:{'qiongqi:tail':1,'qiongqi:wing':1},coins:13,armor:{}},
+  {id:'r_foot',name:'骸胫',kind:'armor',grade:0,slot:'foot',seal:'锐锋',mats:{'tulou:hoof':1,'tulou:eye':1},coins:11,armor:{speed:2}},
+  {id:'k_head',name:'熊首盔',kind:'armor',grade:0,slot:'head',seal:'坚壁',mats:{'pi:head':1,'pi:fur':1},coins:16,armor:{hp:4}},
+  {id:'k_body',name:'厚皮衣',kind:'armor',grade:0,slot:'body',seal:'坚壁',mats:{'pi:paw':2},coins:18,armor:{hp:8}},
+  {id:'k_legs',name:'巨躯裙',kind:'armor',grade:0,slot:'legs',seal:'坚壁',mats:{'pi:leg':1,'tulou:wool':1},coins:16,armor:{hp:4}},
+  {id:'k_hand',name:'珠鳞手',kind:'armor',grade:0,slot:'hand',seal:'坚壁',mats:{'chiru:body':1,'chiru:fin':1},coins:14,armor:{hp:3}},
+  {id:'k_foot',name:'白首履',kind:'armor',grade:0,slot:'foot',seal:'坚壁',mats:{'tiangou:head':1,'tiangou:leg':1},coins:14,armor:{hp:3}},
+  {id:'f_head',name:'猿臂盔',kind:'armor',grade:0,slot:'head',seal:'疾风',mats:{'xingxing:arm':1,'xingxing:ear':1},coins:16,armor:{air:2}},
+  {id:'f_body',name:'疾足衣',kind:'armor',grade:0,slot:'body',seal:'疾风',mats:{'xingxing:body':1,'xingxing:tail':1},coins:18,armor:{air:3}},
+  {id:'f_legs',name:'鸠首裙',kind:'armor',grade:0,slot:'legs',seal:'疾风',mats:{'guanguan:head':1,'guanguan:feather':1},coins:15,armor:{air:2}},
+  {id:'f_hand',name:'彩羽手',kind:'armor',grade:0,slot:'hand',seal:'疾风',mats:{'guanguan:feather':1,'guanguan:body':1},coins:14,armor:{air:2}},
+  {id:'f_foot',name:'鸣管履',kind:'armor',grade:0,slot:'foot',seal:'疾风',mats:{'guanguan:leg':1,'zhunu:leg':1},coins:14,armor:{air:2}},
+  /* 二等双印 */
+  {id:'d_body',name:'穷奇皮甲',kind:'armor',grade:1,slot:'body',seals:['固守','锐锋'],mats:{'qiongqi:head':1,'qiongqi:belly':1},coins:70,armor:{hp:8}},
+  {id:'d_hand',name:'蛊雕羽衣',kind:'armor',grade:1,slot:'hand',seals:['疾行','疾风'],mats:{'gudiao:wing':1,'gudiao:chest':1},coins:68,armor:{speed:4}},
+  {id:'d_legs',name:'土蝼重甲',kind:'armor',grade:1,slot:'legs',seals:['坚壁','固守'],mats:{'tulou:hoof':1,'tulou:back':1},coins:72,armor:{hp:10}}
+];
+
+const SLOTNAME = {weapon:'武器',trinket:'饰品',head:'头',body:'上身',legs:'下身',hand:'手',foot:'足'};
+const SLOTS = ['weapon','trinket','head','body','legs','hand','foot'];
+const ARMOR_SLOTS = ['head','body','legs','hand','foot'];
+
+/* ==================== 状态 ==================== */
+let uidSeq = 1;
+function newPlayer(){
+  return {
+    hp:120, coins:40, kills:0,
+    bag:{}, armory:[],
+    equip:{weapon:null,trinket:null,head:null,body:null,legs:null,hand:null,foot:null},
+    loadout:[null,null,null],
+    atkCount:0, burn:0, burnDmg:1,
+    debuff:{slowTurns:0,slowAmt:0,weightUp:0,missTurns:0,scramble:0,speedStack:0}
+  };
+}
+let S = newPlayer();
+
+/* ---- 存档 ---- */
+const SAVE_KEY = 'dingtu_v1';
+function saveGame(){
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({v:1, S:S, uid:uidSeq}));
+  }catch(e){}
+}
+function loadGame(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(!d || !d.S || !d.S.armory) return false;
+    S = d.S;
+    uidSeq = d.uid || 1;
+    // 兜底：补齐旧档可能缺的字段
+    if(!S.loadout) S.loadout = [null,null,null];
+    if(!S.debuff) S.debuff = {slowTurns:0,slowAmt:0,weightUp:0,missTurns:0,scramble:0,speedStack:0};
+    if(typeof S.hp !== 'number') S.hp = playerMaxHp();
+    return true;
+  }catch(e){ return false; }
+}
+function giveStarter(){
+  const it = {uid:uidSeq++, id:'w0', quality:'精奇'};
+  S.armory.push(it); S.loadout[0] = it.uid; S.equip.weapon = it.uid;
+}
+giveStarter();
+
+/* ==================== 工具 ==================== */
+const $ = id => document.getElementById(id);
+const rnd = () => Math.random();
+const fmt = x => (Math.round(x*10)/10).toFixed(1);
+const recipeOf = id => id ? (RECIPES.find(r=>r.id===id)||null) : null;
+
+function itemOf(uid){ if(!uid) return null; return S.armory.find(a=>a.uid===uid) || null; }
+function eq(slot){ return itemOf(S.equip[slot]); }
+function eqRecipe(slot){ const it = eq(slot); return it ? recipeOf(it.id) : null; }
+function eqQuality(slot){ const it = eq(slot); return (it && it.quality) ? it.quality : '精奇'; }
+function qfix(slot){ return QFIX[eqQuality(slot)] || 0; }
+function qsel(slot){ return QSEAL[eqQuality(slot)] || 0; }
+
+function sealCounts(){
+  const c = {};
+  for(const slot of ARMOR_SLOTS){
+    const r = eqRecipe(slot);
+    if(!r) continue;
+    const seals = r.seal ? [r.seal] : (r.seals || []);
+    for(const s of seals) c[s] = (c[s]||0) + qsel(slot);
+  }
+  return c;
+}
+function sealList(){
+  const c = sealCounts();
+  return Object.keys(SEAL_TIERS).map(k=>{
+    const t = SEAL_TIERS[k], n = c[k]||0;
+    let tier = 0;
+    for(let i=0;i<3;i++) if(n >= t.need[i]) tier = i+1;
+    return {seal:k, n, tier, tiers:t};
+  });
+}
+function sealBonus(seal){
+  const s = sealList().find(x=>x.seal===seal);
+  if(!s || !s.tier) return 0;
+  return SEAL_TIERS[seal].val[s.tier-1];
+}
+function trinketPas(){
+  const r = eqRecipe('trinket');
+  return (r && r.pas) ? r.pas : [];
+}
+
+function stats(){
+  const s = {hp:120, sp:100, red:0, armor:0, shield:0, crit:0, ls:0, air:0, heal:0, first:0};
+  for(const tp of trinketPas()){
+    const fx = qfix('trinket');
+    if(tp.reduce) s.red += tp.reduce + fx*0.01;
+    if(tp.hp) s.hp += tp.hp + fx;
+    if(tp.speed) s.sp += tp.speed + fx;
+    if(tp.crit) s.crit += tp.crit + fx*0.01;
+    if(tp.lifesteal) s.ls += tp.lifesteal + fx*0.01;
+    if(tp.shield) s.shield += tp.shield + fx;
+    if(tp.armor) s.armor += tp.armor;
+    if(tp.healOnHit) s.heal += tp.healOnHit + fx;
+    if(tp.firstStrike) s.first += tp.firstStrike;
+  }
+  for(const slot of ARMOR_SLOTS){
+    const r = eqRecipe(slot);
+    if(!r || !r.armor) continue;
+    const fx = qfix(slot), a = r.armor;
+    if(a.hp) s.hp += a.hp + fx;
+    if(a.speed) s.sp += a.speed;
+    if(a.reduce) s.red += a.reduce + fx*0.01;
+    if(a.armor) s.armor += a.armor;
+    if(a.air) s.air += a.air;
+    if(a.shield) s.shield += a.shield;
+  }
+  s.red += sealBonus('固守');
+  s.sp += sealBonus('疾行');
+  s.hp += sealBonus('坚壁');
+  s.air += sealBonus('疾风');
+  if(S.debuff.slowTurns>0) s.sp -= S.debuff.slowAmt;
+  s.sp += (S.debuff.speedStack||0);
+  s.sp = Math.max(30, Math.round(s.sp));
+  s.red = Math.min(0.7, s.red);
+  return s;
+}
+function playerSpeed(){ return stats().sp; }
+function playerReduce(){ return stats().red; }
+function playerMaxHp(){ return stats().hp; }
+
+/* 武器：三把轮换 */
+function curWUid(){ return S.loadout[(B && B.wIdx) || 0]; }
+function curWItem(){ return itemOf(curWUid()); }
+function weaponSkills(){
+  const it = curWItem();
+  if(!it) return [];
+  const r = recipeOf(it.id);
+  return r.sks || [];
+}
+function weaponSkill(){ const arr = weaponSkills(); const i = (B && B.selSkill) || 0; return arr[i] || arr[0]; }
+function weaponElem(){ const it = curWItem(); if(!it) return ''; const r = recipeOf(it.id); return (r && r.elem) || ''; }
+function selSkill(i){ if(!B || B.over) return; B.selSkill = i; renderBattle(); }
+function switchW(i){
+  if(!B || B.over) return;
+  if(i === B.wIdx) return;
+  if(!S.loadout[i]) return;
+  B.wIdx = i; B.selSkill = 0;
+  B.tp += 40 / stats().sp;
+  const it = itemOf(S.loadout[i]);
+  const r = recipeOf(it.id);
+  blog('换兵器，横举'+r.name+'，气走了一截。','mat');
+  resolveUntilPlayer();
+  if(!B.over) renderBattle();
+}
+function toLoadout(uid){
+  const u = Number(uid);
+  if(S.loadout.includes(u)){ S.loadout[S.loadout.indexOf(u)] = null; renderBag(); return; }
+  const i = S.loadout.indexOf(null);
+  if(i < 0){ alert('阵中最多三把。先撤一把。'); return; }
+  S.loadout[i] = u;
+  renderBag();
+}
+
+function matName(key){
+  const [b,p] = key.split(':');
+  return (BEASTS[b] && BEASTS[b].mats[p]) ? BEASTS[b].mats[p] : key;
+}
+function addMat(key,q){ if(!S.bag[key]) S.bag[key]=[]; S.bag[key].push(q); }
+function countMat(key){ return (S.bag[key]||[]).length; }
+function bagList(){
+  return Object.keys(S.bag).filter(k=>S.bag[k].length).map(k=>{
+    const counts={}; S.bag[k].forEach(q=>counts[q]=(counts[q]||0)+1);
+    return {key:k, name:matName(k), counts};
+  });
+}
+function qualityOf(cur, max){
+  if(cur <= 0) return null;
+  if(cur === max) return '完璧';
+  if(cur === 1 || max <= 3) return '残缺';
+  if(cur*2 > max) return '精奇';
+  return '寻常';
+}
+function monsterSkillText(sk){
+  const bits = ['回气 '+(sk.cd||1)];
+  if(sk.weight) bits.push('重 '+sk.weight);
+  if(sk.dmg) bits.push('伤 '+sk.dmg);
+  if(sk.guard) bits.push('下次受击减半');
+  if(sk.guardFull) bits.push('下次受击全免');
+  if(sk.reduce) bits.push('减伤 '+Math.round(sk.reduce*100)+'%');
+  if(sk.thorns) bits.push('反伤 '+sk.thorns);
+  if(sk.steal) bits.push('偷气 '+Math.round(sk.steal*100)+'%');
+  if(sk.burn) bits.push('灼烧 '+sk.burn);
+  if(sk.slow) bits.push('令你行速 −'+sk.slow.amt);
+  if(sk.weightUp) bits.push('令你手沉 +'+sk.weightUp);
+  if(sk.miss) bits.push('你 '+Math.round(sk.miss*100)+'% 落空');
+  if(sk.scramble) bits.push('你落点被打乱');
+  if(sk.scrambleOne) bits.push('你下一击乱落');
+  if(sk.selfSpeed) bits.push('自身行速 +'+sk.selfSpeed);
+  if(sk.lifestealSelf) bits.push('命中回 '+sk.lifestealSelf);
+  if(sk.charge) bits.push('蓄力');
+  if(sk.multi) bits.push(sk.multi+' 段');
+  return bits.join('　');
+}
+function fmtSkillFull(sk){
+  const f = qfix('weapon') + sealBonus('锐锋');
+  const it = curWItem();
+  return '伤 '+(sk.dmg+f)+'　重 '+sk.weight+'　'+
+    (sk.aim?('偏 '+Object.keys(sk.aim).map(k=>k+'×'+sk.aim[k]).join(' ')):'无偏')+
+    (sk.slow?'　迟 '+sk.slow+' 秒':'')+(sk.burn?'　灼烧 '+sk.burn:'')+
+    (sk.bleed?'　出血 '+sk.bleed:'')+(sk.extra?'　'+Math.round(sk.extra.chance*100)+'% 再抽 '+sk.extra.dmg:'')+
+    (sk.pierce?'　破甲':'')+(sk.multi?'　'+sk.multi+' 段':'')+(sk.charge?'　蓄力':'')+
+    (sk.delayEnemy?'　敌迟 '+sk.delayEnemy:'');
+}
+function skillCost(sk){
+  return Math.max(40, sk.weight + (S.debuff.weightUp||0) - stats().air);
+}
+
+/* ==================== 战斗 ==================== */
+let B = null;
+const BASE_SPEED = 100;
+function blog(t,c){ if(B) B.log.push({text:t, cls:c||''}); }
+
+function startBattle(id){
+  const def = BEASTS[id];
+  const st = stats();
+  S.hp = Math.min(S.hp, st.hp);
+  S.debuff = {slowTurns:0,slowAmt:0,weightUp:0,missTurns:0,scramble:0,speedStack:0};
+  B = {
+    def, hp:def.hp, maxHp:def.hp, atkSpeed:def.speed,
+    parts:def.parts.map(p=>({...p, cur:p.max, sk:{...p.sk}, readyAt:0})),
+    pool:0, tp:0, tm:100/def.speed,
+    guard:false, guardFull:false, lastAct:null, burnLeft:0, bleedLeft:0, myActs:0,
+    pShield: st.shield, wIdx:0, charging:false, firstHit:true,
+    over:false, won:false, selSkill:0, log:[]
+  };
+  blog('入山。遇【'+def.name+'】（'+GRADES[def.grade]+'·'+def.elem+'）。');
+  blog('气钟起转：你 '+st.sp+' 行速，它 '+def.speed+' 行速。'+(st.shield?'　息壤护体 '+st.shield+' 点。':''));
+  resolveUntilPlayer();
+  renderBattle();
+}
+function poolThreshold(){ return B.maxHp * 0.1; }
+
+function aimMap(){
+  const sk = weaponSkill();
+  const aim = {};
+  if(sk.aim) for(const k in sk.aim) aim[k] = sk.aim[k];
+  for(const tp of trinketPas()) if(tp.aim) for(const k in tp.aim) aim[k] = (aim[k]||1)*tp.aim[k];
+  return aim;
+}
+function partWeight(p, aim){
+  if(p.cur <= 0) return 0;
+  let w = p.core ? 1.3 : (1 + (p.max-1)*0.4);
+  if(aim[p.type]) w *= aim[p.type];
+  if(aim[p.id])   w *= aim[p.id];
+  return Math.max(0.12, w);
+}
+function weightPcts(){
+  const aim = aimMap();
+  const ws = B.parts.map(p=>partWeight(p,aim));
+  const total = ws.reduce((a,b)=>a+b,0) || 1;
+  const out = {};
+  B.parts.forEach((p,i)=>{ out[p.id] = ws[i]/total; });
+  return out;
+}
+function rollPart(scramble){
+  const alive = B.parts.filter(p=>p.cur>0);
+  if(!alive.length) return null;
+  if(scramble) return alive[Math.floor(rnd()*alive.length)];
+  const aim = aimMap();
+  const ws = B.parts.map(p=>partWeight(p,aim));
+  const total = ws.reduce((a,b)=>a+b,0);
+  let r = rnd()*total;
+  for(let i=0;i<ws.length;i++){
+    r -= ws[i];
+    if(r <= 0 && B.parts[i].cur > 0) return B.parts[i];
+  }
+  return alive[alive.length-1];
+}
+function pickBreakTarget(preferId){
+  const alive = B.parts.filter(p=>p.cur>0);
+  if(!alive.length) return null;
+  const pref = alive.find(p=>p.id===preferId);
+  if(pref) return pref;
+  alive.sort((a,b)=>b.cur-a.cur);
+  return alive[0];
+}
+
+function playerAttack(){
+  if(!B || B.over) return;
+  const st = stats();
+  const sk = weaponSkill();
+  if(!sk){ blog('阵中没有兵器。','bad'); return; }
+  const scramble = S.debuff.scramble > 0;
+  if(scramble) S.debuff.scramble = 0;
+  const cost = skillCost(sk);
+
+  const missP = B.parts.find(p=>p.kind==='passive' && p.cur>0 && p.sk.miss);
+  if(missP && rnd() < missP.sk.miss){
+    S.atkCount++; B.myActs++;
+    blog('你的【'+sk.name+'】落空——【'+missP.name+'】一抬，刀没沾上。','bad');
+    B.tp += cost / st.sp;
+    resolveUntilPlayer();
+    if(!B.over) renderBattle();
+    return;
+  }
+
+  const part = rollPart(scramble);
+  if(!part) return;
+  if(scramble) blog('方向乱了，这一击不按你的意思落。','bad');
+
+  S.atkCount++; B.myActs++;
+  let dmg = sk.dmg + qfix('weapon') + sealBonus('锐锋');
+  if(part.core) dmg -= 2;
+  const em = elemMul(weaponElem(), B.def.elem);
+  if(em !== 1){ dmg *= em; blog((em>1?'五行相克，':'五行相背，')+'此击 ×'+em.toFixed(2), 'mat'); }
+  if(st.first > 0 && B.firstHit){ dmg *= (1+st.first); blog('首击锐利，×'+(1+st.first).toFixed(2),'mat'); }
+  let crit = false;
+  if(st.crit > 0 && rnd() < st.crit){ crit = true; dmg *= 1.5; }
+  if(sk.pierce && (B.guard || B.guardFull)){ B.guard=false; B.guardFull=false; blog('一记破甲，护盾散了。','mat'); }
+  if(B.guardFull){ B.guardFull = false; dmg = 0; blog('一层水泡把这一记全吃了。'); }
+  else if(B.guard){ dmg *= 0.5; B.guard=false; blog('壳一缩，这一记卸了大半。'); }
+  const passive = B.parts.find(p=>p.kind==='passive' && p.cur>0 && p.sk.reduce);
+  if(passive) dmg *= (1 - passive.sk.reduce);
+
+  for(const tp of trinketPas()){
+    if(tp.every && S.atkCount % tp.every === 0){
+      const bn = tp.bonus + qfix('trinket');
+      dmg += bn; blog('惑目珠一转，多 '+bn+' 点。','mat');
+    }
+    if(tp.fireChance && rnd() < tp.fireChance){
+      const fd = tp.fireDmg + qfix('trinket');
+      dmg += fd; blog('蹈炎珮起火，多烫了 '+fd+' 点。','mat');
+    }
+    if(tp.speedStack) S.debuff.speedStack = Math.min(tp.speedCap||10, (S.debuff.speedStack||0) + tp.speedStack);
+  }
+  if(sk.extra && rnd() < sk.extra.chance){ dmg += sk.extra.dmg; blog('三尾抽出三记，多 '+sk.extra.dmg+' 点。','mat'); }
+  if(sk.charge){ B.pAtkCharge = true; blog('这一记蓄住了，下一击翻倍。','mat'); }
+  if(B.pAtkCharge && !sk.charge){ dmg *= 2; B.pAtkCharge = false; blog('蓄势落下，双倍。','hit'); }
+
+  dmg = Math.max(1, Math.round(dmg));
+  const seg = sk.multi || 1;
+  B.hp = Math.max(0, B.hp - dmg);
+  blog('你【'+sk.name+'】'+(crit?'暴击':'')+(seg>1?'（分 '+seg+' 段）':'')+'，落在【'+part.name+'】：'+dmg+' 点。','hit');
+  B.firstHit = false;
+  if(st.ls > 0 && dmg > 0){
+    const back = Math.round(dmg * st.ls);
+    if(back > 0){ S.hp = Math.min(playerMaxHp(), S.hp + back); blog('噬血回 '+back+' 点。','ok'); }
+  }
+  if(sk.bleed){ B.bleedLeft += sk.bleed; blog('它出血了。','mat'); }
+
+  B.pool += dmg;
+  const th = poolThreshold();
+  let breaks = 0;
+  while(B.pool >= th){
+    B.pool -= th;
+    const tgt = pickBreakTarget(part.id);
+    if(!tgt){ B.pool = 0; break; }
+    tgt.cur--; breaks++;
+    blog('破窍：【'+tgt.name+'】'+(tgt.cur<=0?'碎裂':('剩 '+tgt.cur+'/'+tgt.max)),'brk');
+  }
+  if(breaks===0) blog('伤害 '+dmg+'，池 '+fmt(B.pool)+'/'+fmt(th)+'。');
+
+  const thorns = B.parts.find(p=>p.kind==='passive' && p.cur>0 && p.sk.thorns);
+  if(thorns){
+    S.hp = Math.max(0, S.hp - thorns.sk.thorns);
+    blog('反伤，你受 '+thorns.sk.thorns+' 点。','bad');
+  }
+  if(sk.slow){ B.tm += sk.slow; blog('它被缠住，出手迟了 '+sk.slow+' 秒。','mat'); }
+  if(sk.burn){ B.burnLeft += sk.burn; blog('它烧起来了。','mat'); }
+  if(sk.delayEnemy){ B.tm += sk.delayEnemy/100; blog('一声威吓，它慢了。','mat'); }
+  for(const tp of trinketPas()) if(tp.delayChance && rnd() < tp.delayChance){
+    B.tm += tp.delay; blog('婴啼铃一响，它慢了 '+tp.delay+' 秒。','mat');
+  }
+
+  if(S.burn>0){ S.hp = Math.max(0, S.hp - S.burnDmg); S.burn--; blog('你身上的火还在烧。','bad'); }
+  if(S.debuff.slowTurns>0) S.debuff.slowTurns--;
+  S.debuff.weightUp = 0;
+  if(st.heal > 0 && S.hp < playerMaxHp()) S.hp = Math.min(playerMaxHp(), S.hp + st.heal);
+
+  if(B.hp<=0){ endBattle(true); return; }
+  if(S.hp<=0){ endBattle(false); return; }
+  const steal = B.parts.find(p=>p.kind==='passive' && p.cur>0 && p.sk.steal);
+  if(steal && rnd() < steal.sk.steal){ B.tp += 0.2; blog('一声夺音，你的气被偷走一截。','bad'); }
+
+  B.tp += cost / st.sp;
+  resolveUntilPlayer();
+  if(!B.over) renderBattle();
+}
+
+function monsterAct(){
+  if(B.burnLeft > 0){
+    const burn = Math.min(B.burnLeft, 6);
+    B.hp = Math.max(0, B.hp - burn); B.burnLeft--;
+    blog('余火烧它，'+burn+' 点。','mat');
+    if(B.hp<=0){ endBattle(true); return; }
+  }
+  if(B.bleedLeft > 0){
+    B.hp = Math.max(0, B.hp - B.bleedLeft); blog('它在流血，'+B.bleedLeft+' 点。','mat');
+    B.bleedLeft--; if(B.hp<=0){ endBattle(true); return; }
+  }
+  const ready = B.parts.filter(p=>p.kind==='active' && p.cur>0 && (p.readyAt||0) <= B.myActs);
+  let alive = ready;
+  if(!alive.length){
+    alive = B.parts.filter(p=>p.kind==='active' && p.cur>0);
+    if(!alive.length){ blog('【'+B.def.name+'】的窍已空，只余喘。'); B.tm += 6; return; }
+  }
+  let pool = alive.filter(p=>p.id!==B.lastAct);
+  if(!pool.length) pool = alive;
+  const p = pool[Math.floor(rnd()*pool.length)];
+  B.lastAct = p.id;
+  p.readyAt = B.myActs + (p.sk.cd || 1);
+  const sk = p.sk;
+
+  if(sk.charge){ B.charging = true; blog('【'+p.name+'】压低双角，蓄住了——下一轮要命。','bad'); }
+  else if(sk.guardFull){ B.guardFull = true; blog('【'+p.name+'】吐出一层水泡。',''); }
+  else if(sk.guard){ B.guard = true; blog('【'+p.name+'】缩壳。',''); }
+  if(sk.dmg){
+    const st = stats();
+    let dmg = sk.dmg;
+    if(B.charging){ dmg *= 2; B.charging = false; }
+    const tp = trinketPas();
+    const dodge = tp.find(x=>x.dodge);
+    if(dodge && rnd() < dodge.dodge){ blog('御凶符一挡，这一下没挨上。','ok'); }
+    else {
+      if(B.pShield > 0){
+        const s = Math.min(B.pShield, dmg); B.pShield -= s; dmg -= s;
+        blog('息壤护体挡了 '+s+' 点。','ok');
+      }
+      if(dmg > 0 && st.armor > 0){
+        const a = Math.min(st.armor, Math.max(0, Math.floor(dmg*0.5)));
+        if(a > 0){ dmg -= a; blog('护甲抵了 '+a+' 点。','ok'); }
+      }
+      dmg = Math.max(1, Math.round(dmg * (1-st.red)));
+      S.hp = Math.max(0, S.hp - dmg);
+      blog('【'+p.name+'】'+sk.name+'：你受 '+dmg+' 点'+(st.red>0?'（减伤 '+Math.round(st.red*100)+'%）':'')+'。','bad');
+      if(sk.burn){ S.burn = sk.burn; S.burnDmg = 1; blog('你烧起来了。','bad'); }
+    }
+    // 穷奇嗜血
+    const ls = B.parts.find(x=>x.kind==='passive' && x.cur>0 && x.sk.lifestealSelf);
+    if(ls && B.hp < B.maxHp){
+      B.hp = Math.min(B.maxHp, B.hp + ls.sk.lifestealSelf);
+      blog('它吸走一口血，回 '+ls.sk.lifestealSelf+' 点。','bad');
+    }
+  }
+  if(sk.slow){ S.debuff.slowTurns = sk.slow.turns; S.debuff.slowAmt = sk.slow.amt; blog('行速 −'+sk.slow.amt+'（'+sk.slow.turns+' 回合）。','bad'); }
+  if(sk.weightUp){ S.debuff.weightUp = sk.weightUp; blog('手头发沉，下次神通重 +'+sk.weightUp+'。','bad'); }
+  if(sk.scrambleOne){ S.debuff.scramble = 1; blog('下一击不知道会落到哪。','bad'); }
+  if(sk.selfSpeed){ B.atkSpeed += sk.selfSpeed; blog('它越走越快（行速 '+B.atkSpeed+'）。','bad'); }
+
+  B.tm += (sk.weight||100) / B.atkSpeed;
+  if(S.hp<=0) endBattle(false);
+}
+function resolveUntilPlayer(){
+  let guard = 0;
+  while(!B.over && guard++ < 300){
+    if(B.tm < B.tp) monsterAct();
+    else return;
+  }
+}
+function endBattle(won){
+  B.over = true; B.won = won;
+  if(won){ S.kills++; S.coins += B.def.reward; blog('——【'+B.def.name+'】伏地。取山。','ok'); }
+  else blog('你倒在山上。山是记不住的。','bad');
+  renderResult();
+}
+
+/* ==================== 渲染基础 ==================== */
+function renderHud(){
+  $('hudCoins').textContent = S.coins;
+  $('hudSpeed').textContent = stats().sp;
+  $('hudKills').textContent = S.kills;
+}
+function showScreen(name){
+  ['sHub','sBag','sForge','sBattle'].forEach(id=>$(id).classList.remove('on'));
+  ['tabHub','tabBag','tabForge'].forEach(id=>$(id).classList.remove('on'));
+  const el = $('s'+name[0].toUpperCase()+name.slice(1));
+  if(el) el.classList.add('on');
+  const tb = $('tab'+name[0].toUpperCase()+name.slice(1));
+  if(tb) tb.classList.add('on');
+}
+function equipRows(){
+  return SLOTS.map(slot=>{
+    if(slot === 'weapon'){
+      return '<div class="slot"><span style="color:#9a8a70">武器</span><span>'+
+        S.loadout.map((u,i)=>u?('<span style="color:'+((B&&B.wIdx===i)?'#8f3226':'#5c4c38')+'">'+(recipeOf(itemOf(u).id).name)+'</span>'):'<span style="color:#c3ae8a">空</span>').join(' / ')+
+        '</span></div>';
+    }
+    const r = eqRecipe(slot);
+    return '<div class="slot"><span style="color:#9a8a70">'+SLOTNAME[slot]+'</span><span>'+
+      (r ? r.name+' <small class="q-'+eqQuality(slot)+'">'+eqQuality(slot)+'</small>' : '—')+'</span></div>';
+  }).join('');
+}
+function sealBlock(){
+  return sealList().map(s=>{
+    const fx = s.tier ? s.tiers.desc[s.tier-1] : '未发动';
+    const lack = !s.tier ? '（差 '+(s.tiers.need[0]-s.n)+' 印）'
+               : (s.tier<3 ? '（再 '+(s.tiers.need[s.tier]-s.n)+' 印升档）' : '（满档）');
+    return '<div style="padding:3px 0;border-bottom:1px dotted #d8c8a8">'+
+      '<div class="seal-row" style="'+(s.tier?'color:#2e7d4f':'')+'">'+
+        '<span>'+s.seal+'　'+s.n+' 印</span><span>'+fx+'<span style="color:#9a8a70">'+lack+'</span></span>'+
+      '</div></div>';
+  }).join('');
+}
+function statBlock(){
+  const s = stats();
+  return '<div class="statgrid">'+
+    '<div><span>体</span><b>'+Math.round(S.hp)+'/'+s.hp+'</b></div>'+
+    '<div><span>行速</span><b>'+s.sp+'</b></div>'+
+    '<div><span>减伤</span><b>'+Math.round(s.red*100)+'%</b></div>'+
+    '<div><span>护甲</span><b>'+s.armor+'</b></div>'+
+    '<div><span>护盾</span><b>'+s.shield+'</b></div>'+
+    '<div><span>暴击</span><b>'+Math.round(s.crit*100)+'%</b></div>'+
+    '<div><span>吸血</span><b>'+Math.round(s.ls*100)+'%</b></div>'+
+    '<div><span>气量减免</span><b>'+s.air+'</b></div>'+
+  '</div>';
+}
+function skillLine(){
+  return weaponSkills().map(s=>s.name+'（伤 '+s.dmg+'，重 '+s.weight+'）').join('<br>');
+}
+function buffLine(){
+  const d = S.debuff, out = [];
+  if(d.slowTurns>0) out.push('脚步沉 −'+d.slowAmt+'（'+d.slowTurns+'）');
+  if(d.weightUp>0) out.push('手沉 ＋'+d.weightUp);
+  if(d.scramble>0) out.push('下一击乱落');
+  if(d.speedStack>0) out.push('行速累积 ＋'+d.speedStack);
+  return out.join('　');
+}
+
+/* ==================== 山门 ==================== */
+function beastCard(b){
+  const rows = b.parts.map(p=>
+    '<div style="padding:3px 0;border-bottom:1px dotted #dbcdb0">'+
+      '<div style="display:flex;gap:8px;align-items:center;font-size:13.2px">'+
+        '<span style="width:60px;flex-shrink:0">'+p.name+'</span>'+
+        '<span style="color:#2f5d62;letter-spacing:1px">'+'●'.repeat(p.max)+'</span>'+
+        '<span style="margin-left:auto;color:#8a6d3b;font-size:12.6px">'+p.sk.name+'</span>'+
+      '</div>'+
+      '<div style="font-size:11.5px;color:#7a6a52;margin-top:1px;padding-left:68px">'+monsterSkillText(p.sk)+'</div>'+
+    '</div>').join('');
+  return '<div style="display:flex;flex-direction:column;border:1px solid var(--line);background:#f7efdd;padding:11px 13px">'+
+    '<div style="font-size:18.4px;letter-spacing:.06em">'+b.name+
+      '<span class="tag" style="color:var(--jade)">'+GRADES[b.grade]+'</span>'+
+      '<span class="tag" style="color:#8f3226">'+b.elem+'</span></div>'+
+    '<div style="font-size:12.6px;color:var(--ink2);line-height:1.65;margin-top:5px">'+b.lore+'</div>'+
+    '<div style="font-size:12.6px;color:#8a6d3b;margin-top:5px">「'+b.hint+'」</div>'+
+    '<div style="margin-top:8px">'+rows+'</div>'+
+    '<div style="font-size:12.6px;color:var(--dim);margin-top:8px;line-height:1.7">'+
+      '血 '+b.hp+'　行速 '+b.speed+'　贝 '+b.reward+'<br>'+
+      '总窍 '+b.parts.reduce((a,p)=>a+p.max,0)+'　<span style="color:#8f3226">主窍 '+b.parts.filter(p=>p.core).map(p=>p.name+'（'+p.max+'）').join('')+'</span>'+
+    '</div>'+
+    '<button class="btn" style="margin-top:auto;margin-top:9px" onclick="startBattle(\''+b.id+'\')">入 山</button>'+
+  '</div>';
+}
+function renderHub(){
+  const g0 = Object.values(BEASTS).filter(b=>b.grade===0).map(beastCard).join('');
+  const g1 = Object.values(BEASTS).filter(b=>b.grade===1).map(beastCard).join('');
+  $('sHub').innerHTML =
+    '<div class="hublayout">'+
+      '<div class="hubmain">'+
+        '<div class="gradehead">一 等 · 常 兽　九 头</div>'+
+        '<div class="beastgrid">'+g0+'</div>'+
+        '<div class="gradehead" style="margin-top:18px">二 等 · 异 兽　三 头</div>'+
+        '<div class="beastgrid">'+g1+'</div>'+
+      '</div>'+
+      '<div class="hubside">'+
+        '<h2>你 · 身具</h2>'+statBlock()+
+        '<div class="bar" style="margin-top:4px"><i style="width:'+Math.max(0,S.hp)/playerMaxHp()*100+'%"></i></div>'+
+        '<div style="margin-top:10px">'+equipRows()+'</div>'+
+        '<h3>契印　3 / 6 / 9</h3>'+sealBlock()+
+        '<h3>神通</h3><div class="muted">'+skillLine()+'</div>'+
+        '<div class="hr"></div>'+
+        '<button class="btn wide" onclick="renderBag()">囊 中 器 材</button>'+
+        '<button class="btn wide" style="margin-top:7px" onclick="renderForge()">鼎 工 处</button>'+
+        '<button class="btn wide" style="margin-top:7px" onclick="restHeal()">歇 一 宿（回满）</button>'+
+      '</div>'+
+    '</div>';
+  showScreen('hub');
+  renderHud();
+  saveGame();
+}
+function restHeal(){ S.hp = playerMaxHp(); S.burn = 0; S.debuff.slowTurns=0; S.debuff.speedStack=0; renderHub(); }
+
+/* ==================== 囊 ==================== */
+function renderBag(){
+  const bag = bagList();
+  const bagHtml = bag.length ? bag.map(b=>
+    '<div class="inv"><span>'+b.name+'</span><span>'+
+      Object.keys(b.counts).map(q=>'<span class="q-'+q+'">'+q+'×'+b.counts[q]+'</span>').join(' ')+
+    '</span></div>').join('') : '<p class="muted">空。</p>';
+
+  const armoryHtml = S.armory.map(it=>{
+    const r = recipeOf(it.id), slot = r.slot || r.kind;
+    const wearing = (slot==='weapon') ? S.loadout.includes(it.uid) : (S.equip[slot] === it.uid);
+    const inArray = (slot==='weapon') && S.loadout.includes(it.uid);
+    let act = '';
+    if(slot==='weapon'){
+      act = inArray
+        ? '<button class="rbtn on" onclick="toLoadout('+it.uid+')">撤阵</button>'
+        : '<button class="rbtn" onclick="toLoadout('+it.uid+')">入阵</button>';
+    } else if(wearing){
+      act = '<button class="rbtn on" onclick="unequip(\''+slot+'\')">卸</button>';
+    } else {
+      act = '<button class="rbtn" onclick="equipItem('+it.uid+')">穿</button>';
+    }
+    return '<div style="border-bottom:1px dotted #d8c8a8;padding:8px 0">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<span>'+r.name+'<span class="tag q-'+it.quality+'">'+it.quality+'</span>'+
+          '<span class="tag" style="color:#9a8a70">'+SLOTNAME[slot]+'</span>'+
+          (r.grade===1?'<span class="tag" style="color:#8f3226">二等</span>':'')+'</span>'+
+        '<span>'+act+'</span>'+
+      '</div>'+
+      '<div class="details" style="margin-top:3px">'+effectAt(r, it.quality)+'</div>'+
+    '</div>';
+  }).join('') || '<p class="muted">还没有造出东西。</p>';
+
+  $('sBag').innerHTML =
+  '<div class="forgelayout">'+
+    '<div style="flex:1;min-width:280px">'+
+      '<h2>囊 · 灵材</h2>'+bagHtml+
+    '</div>'+
+    '<div style="flex:1.4;min-width:280px">'+
+      '<h2>器 库 · 可换</h2>'+armoryHtml+
+    '</div>'+
+    '<div style="width:100%;max-width:340px">'+
+      '<h2>身 · 已穿</h2>'+equipRows()+
+      '<h3>三 把 兵 器</h3>'+
+      '<p class="muted">'+(S.loadout.filter(Boolean).length)+' / 3　战斗中可换，换一次付 40 重。</p>'+
+      statBlock()+
+      '<h3>契印</h3>'+sealBlock()+
+      '<div class="hr"></div>'+
+      '<div class="muted">贝 '+S.coins+'</div>'+
+      '<button class="btn wide" style="margin-top:10px" onclick="renderHub()">回 山 门</button>'+
+    '</div>'+
+  '</div>';
+  showScreen('bag');
+  renderHud();
+  saveGame();
+}
+
+/* ==================== 鼎工处 ==================== */
+function effectAt(r, q){
+  const fix = QFIX[q], sel = QSEAL[q];
+  const out = [];
+  if(r.sks) out.push(r.sks.map(s=>s.name+' 伤'+(s.dmg+fix)).join(' / '));
+  const pas = r.pas || [];
+  for(const p of pas){
+    if(p.reduce) out.push('减伤 '+Math.round((p.reduce+fix*0.01)*100)+'%');
+    if(p.every) out.push('每第'+p.every+'次 +'+(p.bonus+fix));
+    if(p.fireChance) out.push(Math.round(p.fireChance*100)+'% 追 '+(p.fireDmg+fix)+' 火');
+    if(p.speed) out.push('行速 +'+(p.speed+fix));
+    if(p.hp) out.push('体 +'+(p.hp+fix));
+    if(p.healOnHit) out.push('受击回 '+(p.healOnHit+fix));
+    if(p.delayChance) out.push(Math.round(p.delayChance*100)+'% 迟敌 '+p.delay+' 秒');
+    if(p.dodge) out.push('免伤 '+Math.round(p.dodge*100)+'%');
+    if(p.speedStack) out.push('出手行速 +'+p.speedStack+'（至 +'+p.speedCap+'）');
+    if(p.crit) out.push('暴击 '+Math.round((p.crit+fix*0.01)*100)+'%');
+    if(p.lifesteal) out.push('吸血 '+Math.round((p.lifesteal+fix*0.01)*100)+'%');
+    if(p.shield) out.push('开局护盾 '+(p.shield+fix));
+    if(p.armor) out.push('护甲 '+(p.armor+Math.max(0,fix)));
+    if(p.firstStrike) out.push('首击 +'+Math.round(p.firstStrike*100)+'%');
+  }
+  if(r.armor){
+    const a = [];
+    if(r.armor.hp) a.push('体 +'+(r.armor.hp+fix));
+    if(r.armor.speed) a.push('速 +'+r.armor.speed);
+    if(r.armor.reduce) a.push('减伤 '+Math.round((r.armor.reduce+fix*0.01)*100)+'%');
+    if(r.armor.armor) a.push('护甲 '+r.armor.armor);
+    if(r.armor.air) a.push('气量 −'+r.armor.air);
+    out.push(a.join('　'));
+  }
+  const seals = r.seal ? [r.seal] : (r.seals || []);
+  if(seals.length) out.push(seals.map(s=>s+'印 '+sel).join('＋'));
+  return out.join('　');
+}
+function recipeCard(r){
+  const need = Object.keys(r.mats).map(k=>{
+    const have = countMat(k);
+    return '<span style="color:'+(have>=r.mats[k]?'#2e7d4f':'#a33a2a')+'">'+matName(k)+' '+have+'/'+r.mats[k]+'</span>';
+  }).join('　');
+  const enough = Object.keys(r.mats).every(k=>countMat(k)>=r.mats[k]) && S.coins>=r.coins;
+  const body = r.sks ? r.sks.map(s=>s.name+'　'+s.desc.replace('｜','，')).join('<br>') : effectAt(r,'精奇');
+  const seals = r.seal ? [r.seal] : (r.seals || []);
+  return '<div class="card">'+
+    '<div class="t" style="font-size:15.5px">'+r.name+
+      '<span class="tag" style="color:#9a8a70">'+SLOTNAME[r.slot||r.kind]+'</span>'+
+      (r.elem?'<span class="tag" style="color:#8f3226">'+r.elem+'</span>':'')+
+      (seals.length?'<span class="tag" style="color:#8a6d3b">'+seals.join('＋')+'</span>':'')+
+      (r.grade===1?'<span class="tag" style="color:#8f3226">二等</span>':'')+'</div>'+
+    '<div class="details" style="margin-top:5px;color:#5c4c38">'+body+'</div>'+
+    '<div class="details" style="margin-top:4px">'+need+'　贝 '+r.coins+'</div>'+
+    '<button class="btn sm" style="margin-top:7px;width:100%" '+(enough?'':'disabled')+
+      ' onclick="doForge(\''+r.id+'\')">开 炉</button>'+
+  '</div>';
+}
+function renderForge(){
+  const wpn = RECIPES.filter(r=>r.kind==='weapon' && !r.base).map(recipeCard).join('');
+  const trk = RECIPES.filter(r=>r.kind==='trinket').map(recipeCard).join('');
+  const arm = RECIPES.filter(r=>r.kind==='armor').map(recipeCard).join('');
+  $('sForge').innerHTML =
+    '<div style="max-width:1300px;margin:0 auto">'+
+      '<div class="gradehead">武 器</div><div class="grid3">'+wpn+'</div>'+
+      '<div class="sect"><div class="gradehead">饰 品</div><div class="grid3">'+trk+'</div></div>'+
+      '<div class="sect"><div class="gradehead">防 具 · 五 件 五 套</div><div class="grid3">'+arm+'</div></div>'+
+      '<p class="muted" style="margin-top:12px">成器率底 80%。完璧 +5%，精奇 +2%，残缺 −3%，寻常不增不减。失败则诸材各降一档。<br>'+
+      '品质：完璧'+QDESC['完璧']+'　精奇'+QDESC['精奇']+'　寻常'+QDESC['寻常']+'　残缺'+QDESC['残缺']+'</p>'+
+    '</div>';
+  renderHud();
+  showScreen('forge');
+  saveGame();
+}
+function doForge(id){
+  const r = recipeOf(id);
+  if(!r) return;
+  const keys = Object.keys(r.mats);
+  const picks = {};
+  const ord = {完璧:4, 精奇:3, 寻常:2, 残缺:1};
+  for(const k of keys){
+    const arr = (S.bag[k]||[]).slice();
+    if(arr.length < r.mats[k]) return;
+    arr.sort((a,b)=>ord[b]-ord[a]);
+    picks[k] = arr.slice(0, r.mats[k]);
+  }
+  if(S.coins < r.coins) return;
+  let rate = 0.80;
+  const cnt = {完璧:0, 精奇:0, 寻常:0, 残缺:0};
+  Object.values(picks).flat().forEach(q=>cnt[q]++);
+  rate += cnt.完璧*0.05 + cnt.精奇*0.02 - cnt.残缺*0.03;
+  rate = Math.min(0.99, Math.max(0.05, rate));
+  if(!confirm('开炉铸【'+r.name+'】？\n成器率 '+Math.round(rate*100)+'%\n贝 '+r.coins)) return;
+  for(const k of keys){
+    picks[k].forEach(q=>{ const i = S.bag[k].indexOf(q); if(i>=0) S.bag[k].splice(i,1); });
+    if(!S.bag[k] || !S.bag[k].length) delete S.bag[k];
+  }
+  S.coins -= r.coins;
+  if(rnd() <= rate){
+    const all = Object.values(picks).flat();
+    const avg = all.reduce((a,q)=>a+QF[q],0)/all.length;
+    const quality = avg>=1.15 ? '完璧' : avg>=0.95 ? '精奇' : avg>=0.75 ? '寻常' : '残缺';
+    const it = {uid:uidSeq++, id:r.id, quality};
+    S.armory.push(it);
+    if(r.base) {}
+    else if(r.kind==='weapon'){
+      const i = S.loadout.indexOf(null);
+      if(i>=0) S.loadout[i] = it.uid;
+    } else {
+      const slot = r.slot || r.kind;
+      if(!S.equip[slot]) S.equip[slot] = it.uid;
+    }
+    S.hp = Math.min(S.hp, playerMaxHp());
+    alert('成器。\n【'+r.name+'】'+quality+'\n'+effectAt(r, quality)+'\n已入器库');
+  } else {
+    keys.forEach(k=>picks[k].forEach(q=>{ const nq = QNEXT[q]; if(nq) addMat(k, nq); }));
+    alert('炉冷。诸材各降一档，退回囊中。');
+  }
+  renderForge();
+}
+function equipItem(uid){
+  const u = Number(uid);
+  const it = itemOf(u);
+  if(!it) return;
+  const r = recipeOf(it.id);
+  S.equip[r.slot || r.kind] = u;
+  S.hp = Math.min(S.hp, playerMaxHp());
+  renderBag();
+}
+function unequip(slot){
+  S.equip[slot] = null;
+  S.hp = Math.min(S.hp, playerMaxHp());
+  renderBag();
+}
+
+/* ==================== 战斗界面 ==================== */
+function renderBattle(){
+  if(!B) return;
+  const st = stats();
+  const nowT = Math.min(B.tp, B.tm);
+  const nextP = Math.max(0, B.tp - nowT), nextM = Math.max(0, B.tm - nowT);
+  const mx = Math.max(nextP, nextM, 0.5);
+  const pPct = 100 - Math.min(100, nextP/mx*100), mPct = 100 - Math.min(100, nextM/mx*100);
+
+  const wp = weightPcts();
+  const scrambled = S.debuff.scramble > 0;
+  const partRows = B.parts.map(p=>{
+    const dead = p.cur<=0;
+    const dots = '●'.repeat(Math.max(0,p.cur))+'○'.repeat(Math.max(0,p.max-p.cur));
+    const skTxt = dead ? '已破，失其技' : (p.sk.name+'　'+monsterSkillText(p.sk));
+    const pct = dead ? '—' : (scrambled ? '乱' : Math.round(wp[p.id]*100)+'%');
+    return '<div class="part '+(dead?'dead':'')+'">'+
+      '<span class="nm">'+p.name+(p.core?'<span class="core">主窍</span>':'')+'</span>'+
+      '<span class="type">'+p.type+'</span>'+
+      '<span class="dots">'+dots+'</span>'+
+      '<span class="pct">'+pct+'</span>'+
+      '<span class="skl">'+skTxt+'</span></div>';
+  }).join('');
+
+  const sk = weaponSkill();
+  const sks = weaponSkills();
+  const logHtml = B.log.map(l=>'<p class="'+(l.cls||'')+'">'+l.text+'</p>').join('');
+  const bl = buffLine();
+  const em = elemMul(weaponElem(), B.def.elem);
+
+  const wslots = S.loadout.map(function(u,i){
+    const it = itemOf(u);
+    if(!it) return '<div class="ws empty"><div class="n"><span>空位</span></div></div>';
+    const r = recipeOf(it.id);
+    return '<div class="ws '+(i===B.wIdx?'on':'')+'" onclick="switchW('+i+')">'+
+      '<div class="n"><span>'+r.name+'</span><small>'+r.elem+'</small></div>'+
+      '<div style="font-size:11.5px;color:#7a6a52">'+(r.sks[0].name)+'</div></div>';
+  }).join('');
+
+  $('sBattle').innerHTML =
+  '<div class="col left">'+
+    '<h2>你</h2>'+
+    '<div class="lbl"><span>体</span><span>'+Math.round(S.hp)+' / '+st.hp+'</span></div>'+
+    '<div class="bar"><i style="width:'+(Math.max(0,S.hp)/st.hp*100)+'%"></i></div>'+
+    (B.pShield>0?'<div class="lbl" style="margin-top:3px"><span>护盾</span><span>'+B.pShield+'</span></div><div class="bar shield"><i style="width:'+Math.min(100,B.pShield/25*100)+'%"></i></div>':'')+
+    '<h3>数</h3>'+statBlock()+
+    (bl?'<p style="color:#a33a2a;font-size:13.2px;margin-top:6px">'+bl+'</p>':'')+
+    '<h3>契印</h3>'+sealBlock()+
+  '</div>'+
+  '<div class="mid">'+
+    '<div class="midhead">'+
+      '<div class="beastrow"><span class="n">'+B.def.name+'</span>'+
+      '<span class="g">'+GRADES[B.def.grade]+'</span>'+
+      '<span class="e">'+B.def.elem+'</span>'+
+      '<span class="muted" style="margin-left:auto">行速 '+B.atkSpeed+'</span></div>'+
+      '<div class="lbl" style="margin-top:4px"><span>血</span><span>'+B.hp+' / '+B.maxHp+'</span></div>'+
+      '<div class="bar"><i style="width:'+(B.hp/B.maxHp*100)+'%"></i></div>'+
+    '</div>'+
+    '<div class="midbody">'+
+      '<div style="font-size:12.6px;color:#8f3226;margin:8px 0 6px">五行：'+(weaponElem()?
+        (em>1?'你的'+weaponElem()+'克它的'+B.def.elem+'（×1.3）':(em<1?'你的'+weaponElem()+'被它的'+B.def.elem+'克（×0.85）':'不相克（×1）'))
+        :'你无属性（×1）')+'</div>'+
+      '<div class="clock">'+
+        '<div class="row"><span class="who">你</span><span class="track"><i style="width:'+pPct+'%;background:#8f3226"></i></span><span class="tm">'+fmt(nextP)+' 秒</span></div>'+
+        '<div class="row"><span class="who">'+B.def.name+'</span><span class="track"><i style="width:'+mPct+'%;background:#2f5d62"></i></span><span class="tm">'+fmt(nextM)+' 秒</span></div>'+
+      '</div>'+
+      partRows+
+      '<p class="muted" style="margin-top:10px">破窍池 '+fmt(B.pool)+' / '+fmt(poolThreshold())+
+      (B.guardFull?'　·　<b style="color:#2f5d62">水泡护体</b>':(B.guard?'　·　<b style="color:#2f5d62">壳已竖起</b>':''))+
+      (B.charging?'　·　<b style="color:#8f3226">它在蓄力</b>':'')+'</p>'+
+    '</div>'+
+    '<div class="actions">'+
+      '<div class="wslots">'+wslots+'</div>'+
+      '<div class="skills">'+
+        sks.map(function(x,i){
+          return '<div class="sk '+(i===(B.selSkill||0)?'sel':'')+'" onclick="selSkill('+i+')">'+
+            '<div class="a"><span>'+x.name+'</span><small>重 '+x.weight+' → '+skillCost(x)+'</small></div>'+
+            '<div class="b">'+fmtSkillFull(x)+'</div></div>';
+        }).join('')+
+        '<button class="btn red" style="flex:0 0 120px" onclick="playerAttack()">出 手</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="col right">'+
+    '<h2>山 记</h2>'+
+    '<div class="log" id="logBox">'+logHtml+'</div>'+
+  '</div>';
+  const lb = $('logBox');
+  if(lb) lb.scrollTop = lb.scrollHeight;
+  renderHud();
+  showScreen('battle');
+}
+
+/* ==================== 结算 ==================== */
+let lastMats = [];
+function renderResult(){
+  const mats = [];
+  B.parts.forEach(p=>{
+    const q = qualityOf(p.cur, p.max);
+    if(q) mats.push({key:B.def.id+':'+p.id, matName:B.def.mats[p.id], part:p.name, q, core:p.core});
+  });
+  lastMats = mats;
+  const matHtml = mats.length
+    ? mats.map(m=>'<div class="inv"><span>'+m.matName+'（'+m.part+(m.core?' · 主窍':'')+'）</span>'+
+        '<span class="q-'+m.q+'">'+m.q+'</span></div>').join('')
+    : '<p class="muted">这一趟什么也没带回来。</p>';
+  const broke = B.parts.filter(p=>p.cur<=0).map(p=>p.name).join('、') || '无';
+
+  $('sBattle').innerHTML =
+  '<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;padding:24px">'+
+    '<div class="sheet" style="width:min(620px,100%);max-height:620px">'+
+      '<h2 style="border:0;font-size:20.7px;color:'+(B.won?'#2e7d4f':'#a33a2a')+'">'+(B.won?'取 山':'败 退')+'</h2>'+
+      '<p>'+(B.won?'【'+B.def.name+'】伏地。破掉的窍散了图，剩下的图归你。':'你倒在山上。回鼎边歇一宿再来。')+'</p>'+
+      '<div class="hr"></div>'+
+      '<p class="muted">破去的窍：'+broke+'</p>'+
+      (B.won?'<p class="muted" style="margin:8px 0">所得灵材</p>'+matHtml:'')+
+      (B.won?'<p class="muted" style="margin-top:8px">贝 +'+B.def.reward+'</p>':'')+
+      '<div class="hr"></div>'+
+      '<button class="btn wide" onclick="'+(B.won?'takeAndForge()':'backHub()')+'">'+(B.won?'收 材 · 回 鼎':'回 鼎')+'</button>'+
+    '</div>'+
+  '</div>';
+  showScreen('battle');
+  renderHud();
+}
+function takeAndForge(){ lastMats.forEach(m=>addMat(m.key,m.q)); B=null; renderForge(); }
+function backHub(){ B=null; S.hp=Math.min(S.hp, playerMaxHp()); renderHub(); }
+
+/* ==================== 释义 ==================== */
+function showHelp(){
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.innerHTML =
+  '<div class="sheet">'+
+    '<h2>释 义</h2>'+
+    '<p><span class="k">三把兵器</span>　一场仗最多带三把，战斗中可以换。换一次付 40 重的气量，换完那一击才算数。带三把的理由是覆盖五行、覆盖倾向、覆盖轻重。</p>'+
+    '<p><span class="k">气钟</span>　没有回合，只有一条共用的钟。出手后等 重 ÷ 行速 秒。</p>'+
+    '<p><span class="k">落点</span>　不能挑打哪里。按权重掷窍：窍越大越容易碰上，主窍固定偏低，武器的部位倾向再把权重拨过去。</p>'+
+    '<p><span class="k">破窍</span>　伤害进池，每满对方 10% 生命破一窍，落在这一击碰上的窍。打死一只正好破十点。</p>'+
+    '<p><span class="k">五行</span>　金克木、木克土、土克水、水克火、火克金。克制 ×1.3，被克 ×0.85。</p>'+
+    '<p><span class="k">契印</span>　五件防具，每件按其品质给印。同系凑 3 / 6 / 9 印发三档，取最高档。二等防具一件带两系印。</p>'+
+    '<p><span class="k">品质</span>　完璧'+QDESC['完璧']+'；精奇'+QDESC['精奇']+'；寻常'+QDESC['寻常']+'；残缺'+QDESC['残缺']+'。</p>'+
+    '<p><span class="k">等第</span>　一常兽（九头）、二异兽（三头）。异兽六窍二十点，主窍三格。</p>'+
+    '<div class="hr"></div>'+
+    '<button class="btn wide" onclick="this.closest(\'.overlay\').remove()">合 上</button>'+
+  '</div>';
+  $('app').appendChild(ov);
+}
+
+$('btnHelp').onclick = showHelp;
+$('btnReset').onclick = function(){
+  if(confirm('从头开始？存档也会清掉。')){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} uidSeq = 1; S = newPlayer(); giveStarter(); renderHub(); }
+};
+if(loadGame()) renderHub(); else renderHub();
+</script>
+</body>
+</html>
