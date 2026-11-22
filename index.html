@@ -1452,13 +1452,19 @@ function renderResult(){
       (B.won?'<p class="muted" style="margin:8px 0">所得灵材</p>'+matHtml:'')+
       (B.won?'<p class="muted" style="margin-top:8px">贝 +'+B.def.reward+'</p>':'')+
       '<div class="hr"></div>'+
-      '<button class="btn wide" onclick="'+(B.won?'takeAndForge()':'backHub()')+'">'+(B.won?'收 材 · 回 鼎':'回 鼎')+'</button>'+
+      '<button class="btn wide" onclick="'+(B.won?'takeAndHub()':'backHub()')+'">'+(B.won?'收 材 · 回 山 门':'回 山 门')+'</button>'+
+      (B.won?'<button class="btn wide" style="margin-top:7px" onclick="takeAndAgain()">收 材 · 再 战 一 场</button>':'')+
     '</div>'+
   '</div>';
   showScreen('battle');
   renderHud();
 }
-function takeAndForge(){ lastMats.forEach(m=>addMat(m.key,m.q)); B=null; renderForge(); }
+function takeMats(){
+  lastMats.forEach(m=>addMat(m.key,m.q));
+  lastMats = [];
+}
+function takeAndHub(){ takeMats(); B=null; S.hp=Math.min(S.hp, playerMaxHp()); renderHub(); }
+function takeAndAgain(){ const id = B && B.def ? B.def.id : null; takeMats(); B=null; if(id) startBattle(id); else renderHub(); }
 function backHub(){ B=null; S.hp=Math.min(S.hp, playerMaxHp()); renderHub(); }
 
 /* ==================== 释义 ==================== */
